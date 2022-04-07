@@ -1,0 +1,22 @@
+<div
+  *ngIf="vm$ | async as vm"
+  class="relative p-3 grid place-items-top min-h-screen justify-items-center w-full"
+>
+  <header-bar
+    [searchFor]="vm.searchBy"
+    [filterBy]="vm.filterBy"
+    (onLoad)="vm.loadMovies($event)"
+    (onFilter)="vm.updateFilter($event)"
+    (onClear)="vm.clearFilter()"
+  ></header-bar>
+
+  <div
+    class="pt-4 max-w-5xl grid gap-4 sm:grid-cols-2"
+    [@listAnimation]="vm.filteredMovies.length"
+  >
+    <movie-card
+      *ngFor="let it of vm.filteredMovies; trackBy: trackByKey"
+      [movie]="it"
+    ></movie-card>
+  </div>
+</div>
