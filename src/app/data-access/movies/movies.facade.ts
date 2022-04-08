@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-import { freeze } from 'immer';
+import { produce } from 'immer';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -21,19 +21,21 @@ import {
 
 @Injectable()
 export class MoviesFacade {
-  public state: MovieState;
+  private state: MovieState;
   private _emitter: BehaviorSubject<MovieState>;
   public vm$: Observable<MovieViewModel>;
 
   constructor(private movieAPI: MoviesDataService) {
-    const state = freeze(initState(), true);
+    const state = initState();
     const api = {
       loadMovies: (searchBy: string) => this.loadMovies(searchBy),
       updateFilter: (filterBy: string) => this.updateFilter(filterBy),
       clearFilter: () => this.updateFilter(''),
     };
     const addAPI = (s: MovieState): MovieViewModel =>
-      freeze({ ...s, ...api }, true);
+      produce<MovieState>(this.state, (s: MovieState): MovieViewModel => {
+        return { ...s, ...api };
+      }) as MovieViewModel;
 
     this.state = state;
     this._emitter = new BehaviorSubject<MovieState>(state);
@@ -51,9 +53,10 @@ export class MoviesFacade {
   loadMovies(searchBy: string, page = 1): Observable<MovieState> {
     this.movieAPI.searchMovies(searchBy, page).subscribe((list: unknown) => {
       const allMovies = list as MovieItem[];
-      const state = { ...this.state, allMovies, searchBy };
-
-      freeze((this.state = state), true);
+      this.state = produce(this.state, (draft: MovieState) => {
+        draft.allMovies = allMovies;
+        draft.searchBy = searchBy;
+      });
       this.updateFilter(this.state.filterBy);
     });
 
@@ -66,10 +69,14 @@ export class MoviesFacade {
   updateFilter(filterBy?: string) {
     const state = { ...this.state, filterBy };
     const movies = computeFilteredMovies(state);
-    const matchInOverview = buildMatchIndicator(filterBy);
+    const addMatchIndicators = buildMatchIndicator(filterBy);
 
-    state.filteredMovies = matchInOverview(movies);
-    this._emitter.next((this.state = freeze(state, true)));
+    this.state = produce(this.state, (draft: MovieState) => {
+      draft.filteredMovies = addMatchIndicators(movies);
+      draft.filterBy = filterBy || '';
+    });
+
+    this._emitter.next(this.state);
 
     return this.vm$;
   }
