@@ -1,6 +1,7 @@
-import { FormBuilder, FormControl } from '@angular/forms';
 import { Input, Output, EventEmitter, Component } from '@angular/core';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { FormBuilder, FormControl } from '@angular/forms';
+
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'header-bar',

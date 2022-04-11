@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 div > .match,
 p > .match {
   color: rgb(190, 8, 8);

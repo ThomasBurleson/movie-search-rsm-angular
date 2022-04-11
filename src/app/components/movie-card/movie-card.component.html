@@ -1,24 +1,21 @@
-<div class="h-[300px] mx-auto overflow-hidden bg-white rounded shadow-lg grid grid-cols-2">
+<div
+  class="h-[300px] mx-auto overflow-hidden bg-white rounded shadow-lg grid grid-cols-2"
+>
   <div class="relative border-3 border-color m-3 max-w-175 overflow-hidden">
-    <div class="absolute rounded-lg w-full top-[0px] bottom-[5px] bg-neutral-100 -z-1"></div>
+    <div
+      class="absolute rounded-lg w-full top-[0px] bottom-[5px] bg-neutral-100 -z-1"
+    ></div>
     <img
       src="https://image.tmdb.org/t/p/w200/{{ movie.poster_path }}"
       alt="{{ movie.title }}"
-      class="
-        absolute
-        block
-        object-cover object-top
-        w-full
-        h-full
-        max-h-[270px]
-        rounded-lg
-        border-2 border-neutral-200/50
-        p-px
-      "
+      class="absolute block object-cover object-top w-full h-full max-h-[270px] rounded-lg border-2 border-neutral-200/50 p-px"
     />
   </div>
   <div class="px-3 py-6 max-h-300">
     <div class="font-bold text-xs mb-2" [innerHTML]="movie.title"></div>
-    <p class="text-slate-600 text-xs line-clamp-14" [innerHTML]="movie.overview"></p>
+    <p
+      class="text-slate-600 text-xs line-clamp-14"
+      [innerHTML]="movie.overview"
+    ></p>
   </div>
 </div>

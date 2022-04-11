@@ -12,7 +12,6 @@ import { MoviesFacade, MoviesDataService } from './data-access';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
   ],

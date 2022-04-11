@@ -10,12 +10,12 @@
         type="text"
         name="inputQuery"
         id="inputQuery"
-        class="shadow-sm focus:ring-neutral-500 focus:border-neutral-500 block w-full pr-12 sm:text-sm border-neutral-300 bg-cyan-100 empty:bg-emerald-100 rounded-md"
+        class="p-3 shadow-sm focus:ring-neutral-500 focus:border-neutral-500 block w-full pr-12 sm:text-sm border-neutral-300 bg-cyan-100 empty:bg-emerald-100 rounded-md"
         formControlName="searchBy"
       />
       <div class="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
         <button
-          class="inline-flex items-center border border-neutral-200 rounded px-2 text-sm font-sans font-medium text-neutral-400"
+          class="inline-flex items-center border border-stone-400/30 rounded px-2 text-sm font-sans font-medium text-neutral-400"
           (click)="onLoad.emit(form.value.searchBy)"
           title="Search for Movies"
         >
@@ -47,13 +47,13 @@
         type="text"
         name="inputFilter"
         id="inputFilter"
-        class="shadow-sm focus:ring-neutral-500 focus:border-neutral-500 block w-full pr-12 sm:text-sm border-neutral-300 bg-emerald-100 rounded-md"
+        class="p-3 shadow-sm focus:ring-neutral-500 focus:border-neutral-500 block w-full pr-12 sm:text-sm border-neutral-300 bg-emerald-100 rounded-md"
         (keydown)="clearOnEscape($event)"
         formControlName="filterBy"
       />
       <div class="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
         <button
-          class="inline-flex items-center border border-neutral-200 rounded px-2 text-sm font-sans font-medium text-neutral-400"
+          class="inline-flex items-center border border-stone-400/30 rounded px-2 text-sm font-sans font-medium text-neutral-400"
           (click)="onClear.emit()"
           title="Filter Movies By"
         >
