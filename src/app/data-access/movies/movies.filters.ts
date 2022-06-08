@@ -1,4 +1,4 @@
-import { MovieState, MovieItem } from './movies.model';
+import { MovieItem, MovieState } from './movies.model';
 
 const contentHasMatch = (filterBy: string) => {
   filterBy = filterBy.toLowerCase();
@@ -10,11 +10,25 @@ const contentHasMatch = (filterBy: string) => {
   };
 };
 
+/**
+ * Why are computed properties valuable, calculated on-demand
+ * and NOT serialized.
+ */
+export function computeFilteredMovies(
+  allMovies: MovieItem[],
+  filterBy: string
+): MovieItem[] {
+  const movies = useFilterBy(allMovies, filterBy);
+  const addMatchIndicators = buildMatchIndicator(filterBy);
+
+  return addMatchIndicators(movies);
+}
+
 // Create a filter function
-export function computeFilteredMovies({
-  allMovies,
-  filterBy,
-}: MovieState): MovieItem[] {
+export function useFilterBy(
+  allMovies: MovieItem[],
+  filterBy: string
+): MovieItem[] {
   const hasMatches = contentHasMatch(filterBy);
   return allMovies.filter(hasMatches).map((m) => ({ ...m }));
 }

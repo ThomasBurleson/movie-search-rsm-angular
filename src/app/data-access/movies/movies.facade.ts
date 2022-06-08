@@ -1,21 +1,17 @@
 import { Injectable } from '@angular/core';
-
-import { freeze, produce } from 'immer';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { MoviesDataService } from './movies.data-service';
+import { computeFilteredMovies } from './movies.filters';
 import {
-  initState,
   MovieItem,
   MovieState,
+  MovieComputedState,
   MovieViewModel,
+  MovieStatus,
 } from './movies.model';
-import {
-  movieStateReducer,
-  actions,
-  computeFilteredMovies,
-} from './movies.reducer';
+import { store } from './movies.store';
 
 /**
  * Load movies and cache results for similar future calls.j
@@ -25,30 +21,18 @@ import {
 
 @Injectable()
 export class MoviesFacade {
-  private state: MovieState = freeze(initState(), true);
-  private _emitter: BehaviorSubject<MovieState>;
   public vm$: Observable<MovieViewModel>;
+  public status$: Observable<MovieStatus>;
 
   constructor(private movieAPI: MoviesDataService) {
-    const api = {
-      loadMovies: (searchBy: string) => this.loadMovies(searchBy),
-      updateFilter: (filterBy: string) => this.updateFilter(filterBy),
-      clearFilter: () => this.updateFilter(''),
-    };
-    const addAPI = (s: MovieState): MovieViewModel => {
-      return produce<MovieState>(
-        this.state,
-        (s: MovieState): MovieViewModel => {
-          const filteredMovies = computeFilteredMovies(s);
-          return { ...s, ...api, filteredMovies };
-        }
-      ) as MovieViewModel;
-    };
+    this.vm$ = store.state$.pipe(
+      map((state) => this.addComputedProperties(state)),
+      map((state) => this.addViewModelAPI(state))
+    );
+    this.status$ = store.status$;
 
-    this._emitter = new BehaviorSubject<MovieState>(this.state);
-    this.vm$ = this._emitter.asObservable().pipe(map(addAPI));
-
-    this.loadMovies(this.state.searchBy);
+    // Load initial movies based on default state values OR [pending] router params
+    this.loadMovies(store.searchBy());
   }
 
   /**
@@ -57,18 +41,11 @@ export class MoviesFacade {
    * Use cache to skip remote load
    * Auto-save to cache; based on specified search keys
    */
-  loadMovies(searchBy: string, page = 1): Observable<MovieState> {
-    this.movieAPI
-      .searchMovies<MovieItem[]>(searchBy, page)
-      .subscribe((list: MovieItem[]) => {
-        const allMovies = list as MovieItem[];
+  loadMovies(searchBy: string, page = 1): Observable<MovieViewModel> {
+    const onLoaded = (list: MovieItem[]) => store.updateMovies(list, searchBy);
+    const request$ = this.movieAPI.searchMovies<MovieItem[]>(searchBy, page);
 
-        this.state = movieStateReducer(
-          this.state,
-          actions.onSearchMovies(searchBy, allMovies)
-        );
-        this._emitter.next(this.state);
-      });
+    request$.subscribe(onLoaded);
 
     return this.vm$;
   }
@@ -76,10 +53,39 @@ export class MoviesFacade {
   /**
    * Update the filterBy value used to build the `filteredMovies` list
    */
-  updateFilter(filterBy?: string) {
-    this.state = movieStateReducer(this.state, actions.updateFilter(filterBy));
-    this._emitter.next(this.state);
-
+  updateFilter(filterBy?: string): Observable<MovieViewModel> {
+    store.updateFilter(filterBy);
     return this.vm$;
+  }
+
+  // *******************************************************
+  // Private Methods
+  // *******************************************************
+
+  private addComputedProperties(
+    state: MovieState
+  ): MovieState & MovieComputedState {
+    const filteredMovies = computeFilteredMovies(
+      state.allMovies,
+      state.filterBy
+    );
+    return {
+      ...state,
+      filteredMovies,
+    };
+  }
+
+  private addViewModelAPI(
+    state: MovieState & MovieComputedState
+  ): MovieViewModel {
+    const api = {
+      loadMovies: (searchBy: string) => this.loadMovies(searchBy),
+      updateFilter: (filterBy: string) => this.updateFilter(filterBy),
+      clearFilter: () => this.updateFilter(''),
+    };
+    return {
+      ...state,
+      ...api,
+    };
   }
 }

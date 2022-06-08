@@ -1,13 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { pluck, tap } from 'rxjs';
+import { pluck } from 'rxjs';
 
 /** A trivial data layer service that requests movies from a movie database API */
 @Injectable()
 export class MoviesDataService {
   constructor(private httpClient: HttpClient) {}
 
-  searchByAuthor<TResult extends unknown>(term: string, date: string, author: string) {
+  searchByAuthor<TResult extends unknown>(
+    term: string,
+    date: string,
+    author: string
+  ) {
     term = `${term}&date=${date}&author=${author}`;
     return this.searchMovies<TResult>(term, 1);
   }
@@ -21,7 +25,10 @@ export class MoviesDataService {
         'Content-Type': 'application/json;charset=utf-8',
       },
     };
-    const request$ = this.httpClient.get<{ results: TResult }>('https://api.themoviedb.org/4/search/movie', params);
+    const request$ = this.httpClient.get<{ results: TResult }>(
+      'https://api.themoviedb.org/4/search/movie',
+      params
+    );
 
     return request$.pipe(pluck('results'));
   }

@@ -1,18 +1,21 @@
 export interface MovieItem {
+  id: string;
   title: string;
   overview: string;
   poster_path: string;
 }
 
+export type MovieStatus = 'busy' | 'done' | 'failed';
 export const trackByID = (m: MovieItem) => m.poster_path;
 
 /**
  * This state is serializable
  */
 export interface MovieState {
-  allMovies: MovieItem[];
   searchBy: string;
   filterBy: string;
+  allMovies: MovieItem[];
+  status?: MovieStatus;
 }
 
 /**
@@ -36,9 +39,9 @@ export interface MovieComputedState {
 
 export function initState(): MovieState {
   return {
-    allMovies: [],
     searchBy: 'dogs',
     filterBy: '',
+    allMovies: [],
   };
 }
 
