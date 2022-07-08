@@ -2,37 +2,31 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { MoviesDataService } from './movies.data-service';
+import { MoviesDataService, PaginatedMovieResponse } from './movies.api';
 import { computeFilteredMovies } from './movies.filters';
-import {
-  MovieItem,
-  MovieState,
-  MovieComputedState,
-  MovieViewModel,
-  MovieStatus,
-} from './movies.model';
+import { MovieState, MovieComputedState, MovieViewModel, MovieStatus } from './movies.model';
 import { store } from './movies.store';
 
 /**
- * Load movies and cache results for similar future calls.j
- * Architecture:
+ * Load movies and cache results for similar future calls.
  *
+ * Reactive Architecture:
+ *       UI <-> ViewModel <-> Facade <-> Store
+ *                                 |-->  DataService
  */
-
 @Injectable()
 export class MoviesFacade {
   public vm$: Observable<MovieViewModel>;
   public status$: Observable<MovieStatus>;
 
   constructor(private movieAPI: MoviesDataService) {
-    this.vm$ = store.state$.pipe(
-      map((state) => this.addComputedProperties(state)),
-      map((state) => this.addViewModelAPI(state))
-    );
-    this.status$ = store.status$;
+    const searchBy = store.useQuery((s) => s.searchBy);
 
-    // Load initial movies based on default state values OR [pending] router params
-    this.loadMovies(store.searchBy());
+    this.status$ = store.status$;
+    this.vm$ = store.state$.pipe(map(this.addViewModelAPI.bind(this)));
+
+    // Load initial movies based on default state values
+    this.loadMovies(searchBy);
   }
 
   /**
@@ -40,12 +34,19 @@ export class MoviesFacade {
    *
    * Use cache to skip remote load
    * Auto-save to cache; based on specified search keys
+   * Also smart prefetch next page...
    */
   loadMovies(searchBy: string, page = 1): Observable<MovieViewModel> {
-    const onLoaded = (list: MovieItem[]) => store.updateMovies(list, searchBy);
-    const request$ = this.movieAPI.searchMovies<MovieItem[]>(searchBy, page);
+    if (!!searchBy) {
+      const request$ = this.movieAPI.searchMovies(searchBy, page);
+      const onLoaded = (response: PaginatedMovieResponse) => {
+        const { list, pagination } = response;
+        store.updateMovies(list, pagination, searchBy);
+        this.prefetchPage(searchBy, page + 1);
+      };
 
-    request$.subscribe(onLoaded);
+      request$.subscribe(onLoaded);
+    }
 
     return this.vm$;
   }
@@ -59,28 +60,53 @@ export class MoviesFacade {
   }
 
   // *******************************************************
+  // Pagination Methods
+  // *******************************************************
+
+  /**
+   * Show movies at page #... load if not in cache already
+   * Always try to prefetch next page from 'selected'
+   */
+  showPage(page = 1): Observable<MovieViewModel> {
+    const searchBy = store.useQuery((s) => s.searchBy);
+
+    if (store.pageInRange(page)) {
+      const fromCache = store.selectPage(page);
+
+      if (fromCache && !store.hasPage(page + 1)) {
+        this.prefetchPage(searchBy, page + 1);
+      }
+      return fromCache ? this.vm$ : this.loadMovies(searchBy, page);
+    }
+
+    return this.vm$;
+  }
+
+  // *******************************************************
   // Private Methods
   // *******************************************************
 
-  private addComputedProperties(
-    state: MovieState
-  ): MovieState & MovieComputedState {
-    const filteredMovies = computeFilteredMovies(
-      state.allMovies,
-      state.filterBy
-    );
-    return {
-      ...state,
-      filteredMovies,
-    };
+  /**
+   * Background prefetch for super-fast page navigation rendering
+   */
+  private prefetchPage(searchBy: string, page: number) {
+    if (store.pageInRange(page)) {
+      const request$ = this.movieAPI.searchMovies(searchBy, page);
+      request$.subscribe(({ list }: PaginatedMovieResponse) => {
+        store.addPage(list, page);
+      });
+    }
   }
 
-  private addViewModelAPI(
-    state: MovieState & MovieComputedState
-  ): MovieViewModel {
+  /**
+   * Inject the Facade proxy API into published view model
+   */
+  private addViewModelAPI(state: MovieState & MovieComputedState): MovieViewModel {
     const api = {
-      loadMovies: (searchBy: string) => this.loadMovies(searchBy),
-      updateFilter: (filterBy: string) => this.updateFilter(filterBy),
+      searchMovies: this.loadMovies.bind(this),
+      updateFilter: this.updateFilter.bind(this),
+      showPage: this.showPage.bind(this),
+
       clearFilter: () => this.updateFilter(''),
     };
     return {

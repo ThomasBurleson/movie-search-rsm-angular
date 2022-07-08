@@ -1,3 +1,3 @@
 export * from './movies.model';
-export * from './movies.data-service';
+export * from './movies.api';
 export * from './movies.facade';
