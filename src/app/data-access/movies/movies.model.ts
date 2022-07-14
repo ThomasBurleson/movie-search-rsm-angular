@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { PaginationData } from '@ngneat/elf-pagination';
-
+import { StatusState } from '@ngneat/elf-requests';
 export type Pagination = PaginationData;
 export interface MovieItem extends Record<string, any> {
   id: string;
@@ -9,7 +9,19 @@ export interface MovieItem extends Record<string, any> {
   poster_path: string;
 }
 
-export type MovieStatus = 'busy' | 'done' | 'failed';
+export interface MovieGenre {
+  id: string;
+  name: string;
+}
+
+/**
+ * Selector to quickly determine isLoading state
+ */
+export const isLoading = (s: StatusState) => s.value === 'pending';
+export { StatusState } from '@ngneat/elf-requests';
+/**
+ * Uniquely identify Movie in *ngFor loops
+ */
 export const trackByID = (m: MovieItem) => m.poster_path;
 
 /**
@@ -19,7 +31,6 @@ export interface MovieState {
   searchBy: string;
   filterBy: string;
   allMovies: MovieItem[];
-  status?: MovieStatus;
   pagination: Pagination;
 }
 
@@ -59,11 +70,15 @@ export function initState(): MovieState {
 export type StoreSelector<T extends unknown> = (s: MovieState) => T;
 
 export interface MovieStore {
+  isLoading$: Observable<boolean>;
   state$: Observable<MovieState & MovieComputedState>;
-  status$: Observable<MovieStatus>;
+  status$: Observable<StatusState>;
 
+  setLoading: (isLoading?: boolean) => void;
   updateMovies: (movies: MovieItem[], page: Pagination, searchBy?: string) => void;
   updateFilter: (filterBy?: string) => void;
+  updateStatus: (condition: StatusState['value'] | Error) => void;
+
   useQuery: <T extends unknown>(selector: StoreSelector<T>) => T;
   reset: () => void;
 

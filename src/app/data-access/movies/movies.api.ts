@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { map, Observable, throwError } from 'rxjs';
 
-import { Pagination, MovieItem } from './movies.model';
+import { Pagination, MovieItem, MovieGenre } from './movies.model';
 
 // Formatted response for business layers
 export interface PaginatedMovieResponse {
@@ -20,7 +20,7 @@ export interface RemoteMovieResponse {
 
 const HEADERS_MOVIEDB = {
   Authorization:
-    'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI4MDMwNTJkZWRmMGJkOGViODk2OWEzYWJkMzE2YjQ3NCIsInN1YiI6IjYyMGYwYzQxM2Y0ODMzMDA0NDYzNTdkYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.9H4bwPC-X6VN-YZ-HGX5ynw5alHJxuvnlNTypol67VU',
+    'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMzUwN2ZiYmVkN2JkMjBiZTg3MTNjMTAyMTdiNDRlNCIsInN1YiI6IjYyY2YyNzhjNmRjNTA3MDA1NDY3ZGM3YSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.gNrKzUpRaTHGeiKBTW_rAfq-HMy21rmxJiCBvrBllfY',
   'Content-Type': 'application/json;charset=utf-8',
 };
 
@@ -39,6 +39,17 @@ export class MoviesDataService {
     const request$ = this.httpClient.get<RemoteMovieResponse>('https://api.themoviedb.org/4/search/movie', params);
 
     return request$.pipe(map(buildResponseFor(page))); // return 'results' + pagination information
+  }
+
+  /**
+   * List of all movie Genres
+   * @returns
+   */
+  loadGenres(): Observable<MovieGenre[]> {
+    const params = { headers: HEADERS_MOVIEDB };
+    const request$ = this.httpClient.get<RemoteMovieResponse>('https://api.themoviedb.org/4/genre/movie/list', params);
+
+    return request$.pipe(map((response) => response['genres']));
   }
 }
 

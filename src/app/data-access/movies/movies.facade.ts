@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 
+import { store, trackLoadStatus } from './movies.store'; // singleton instance
 import { MoviesDataService, PaginatedMovieResponse } from './movies.api';
-import { computeFilteredMovies } from './movies.filters';
-import { MovieState, MovieComputedState, MovieViewModel, MovieStatus } from './movies.model';
-import { store } from './movies.store';
+import { MovieState, MovieComputedState, MovieViewModel, StatusState } from './movies.model';
 
 /**
  * Load movies and cache results for similar future calls.
@@ -17,13 +16,16 @@ import { store } from './movies.store';
 @Injectable()
 export class MoviesFacade {
   public vm$: Observable<MovieViewModel>;
-  public status$: Observable<MovieStatus>;
+  public status$: Observable<StatusState>;
+  public isLoading$: Observable<boolean>;
 
   constructor(private movieAPI: MoviesDataService) {
     const searchBy = store.useQuery((s) => s.searchBy);
 
-    this.status$ = store.status$;
     this.vm$ = store.state$.pipe(map(this.addViewModelAPI.bind(this)));
+
+    this.status$ = store.status$; // may contain error informatoin
+    this.isLoading$ = store.isLoading$.pipe(tap((busy) => console.log(`isLoading = ${busy}`)));
 
     // Load initial movies based on default state values
     this.loadMovies(searchBy);
@@ -38,14 +40,16 @@ export class MoviesFacade {
    */
   loadMovies(searchBy: string, page = 1): Observable<MovieViewModel> {
     if (!!searchBy) {
-      const request$ = this.movieAPI.searchMovies(searchBy, page);
-      const onLoaded = (response: PaginatedMovieResponse) => {
-        const { list, pagination } = response;
-        store.updateMovies(list, pagination, searchBy);
-        this.prefetchPage(searchBy, page + 1);
-      };
+      store.setLoading();
 
-      request$.subscribe(onLoaded);
+      this.movieAPI
+        .searchMovies(searchBy, page)
+        .pipe(trackLoadStatus)
+        .subscribe((response: PaginatedMovieResponse) => {
+          const { list, pagination } = response;
+          store.updateMovies(list, pagination, searchBy);
+          this.prefetchPage(searchBy, page + 1);
+        });
     }
 
     return this.vm$;
@@ -88,6 +92,7 @@ export class MoviesFacade {
 
   /**
    * Background prefetch for super-fast page navigation rendering
+   * NOTE: do not update status for background prefetching
    */
   private prefetchPage(searchBy: string, page: number) {
     if (store.pageInRange(page)) {

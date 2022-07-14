@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { of, Observable } from 'rxjs';
+import { of, Observable, throwError } from 'rxjs';
 
 import { PAGES } from './movies.data';
 import { PaginatedMovieResponse } from '../../movies.api';
@@ -8,6 +8,10 @@ import { PaginatedMovieResponse } from '../../movies.api';
 @Injectable()
 export class MoviesDataService {
   searchMovies(query: string, page: number): Observable<PaginatedMovieResponse> {
-    return of(PAGES[page - 1]);
+    return page <= PAGES.length ? of(PAGES[page - 1]) : this.searchWithError(query, page);
+  }
+
+  searchWithError(query: string, page: number): Observable<never> {
+    return throwError(() => new Error(`Invalid movie page requested: ${page}`));
   }
 }

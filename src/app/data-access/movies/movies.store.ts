@@ -1,7 +1,8 @@
-import { map, withLatestFrom } from 'rxjs/operators';
+import { map, withLatestFrom, tap } from 'rxjs/operators';
 
 import { createStore, select, withProps, elfHooks, deepFreeze, emitOnce } from '@ngneat/elf';
 import { withEntities, upsertEntities, deleteAllEntities } from '@ngneat/elf-entities';
+import { withRequestsStatus, selectRequestStatus, updateRequestStatus, createRequestsStatusOperator } from '@ngneat/elf-requests';
 import {
   withPagination,
   updatePaginationData,
@@ -11,10 +12,9 @@ import {
   setCurrentPage,
   selectCurrentPageEntities,
   deleteAllPages,
-  selectCurrentPage,
 } from '@ngneat/elf-pagination';
 
-import { initState, MovieState, MovieItem, Pagination, MovieStore, StoreSelector } from './movies.model';
+import { initState, MovieState, MovieItem, Pagination, MovieStore, StoreSelector, isLoading } from './movies.model';
 import { computeFilteredMovies } from './movies.filters';
 
 /**
@@ -24,14 +24,22 @@ elfHooks.registerPreStoreUpdate((currentState, nextState) => {
   return deepFreeze(nextState);
 });
 
+export const MOVIES = 'movies';
 /**
  * Create store and streams for movies$, status$, and state$
  * Note: state$ includes computed properties and pagination
  */
-const _store = createStore({ name: 'movie' }, withProps<MovieState>(initState()), withEntities<MovieItem>(), withPagination());
+const _store = createStore(
+  { name: MOVIES },
+  withProps<MovieState>(initState()),
+  withEntities<MovieItem>(),
+  withPagination(),
+  withRequestsStatus<'movies'>()
+);
 
 const movies$ = _store.pipe(selectCurrentPageEntities());
-const status$ = _store.pipe(select((state) => state.status));
+const status$ = _store.pipe(selectRequestStatus(MOVIES));
+const isLoading$ = status$.pipe(map(isLoading));
 const state$ = _store.pipe(
   withLatestFrom(movies$),
   map(([state, allMovies]) => {
@@ -72,6 +80,7 @@ function updateMovies(movies: MovieItem[], paging: Partial<Pagination>, searchBy
     _store.update(
       updateSearchBy,
       upsertEntities(movies),
+      updateRequestStatus(MOVIES, 'success'),
       updatePaginationData(pagination),
       setPage(
         pagination.currentPage,
@@ -94,6 +103,23 @@ function updateFilter(filterBy?: string) {
  */
 function useQuery<T extends unknown>(selector: StoreSelector<T>): T {
   return _store.query<T>(selector);
+}
+
+/**********************************************
+ * Status Features
+ **********************************************/
+
+/**
+ * Easily update the status of the MovieStore
+ * @see https://ngneat.github.io/elf/docs/features/requests/requests-status/#updaterequestsstatus
+ */
+function updateStatus(flag: 'success' | 'idle' | 'pending', error?: any) {
+  const params = [MOVIES, ...(!!error ? ['error', error] : [flag])];
+  _store.update(updateRequestStatus.apply(null, params));
+}
+
+function setLoading(isLoading = true) {
+  updateStatus(isLoading ? 'pending' : 'idle');
 }
 
 /**********************************************
@@ -147,10 +173,14 @@ function addPage(movies: MovieItem[], page: number) {
 export const store: MovieStore = {
   state$,
   status$,
+  isLoading$,
 
+  setLoading,
   updateMovies,
   updateFilter,
-  useQuery,
+  updateStatus,
+
+  useQuery, // synchronously extract state value using selector
 
   selectPage,
   hasPage,
@@ -159,3 +189,8 @@ export const store: MovieStore = {
 
   reset: _store.reset.bind(_store),
 };
+
+/**
+ * Create RxJS operator to easily track REST calls
+ */
+export const trackLoadStatus = createRequestsStatusOperator(_store)(MOVIES);

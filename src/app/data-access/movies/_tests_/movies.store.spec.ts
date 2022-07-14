@@ -1,6 +1,10 @@
+import { trackLoadStatus } from './../movies.store';
 import { first } from 'rxjs/operators';
+import { getRequestStatus, StatusState } from '@ngneat/elf-requests';
 
-import { PAGES } from './_mocks/movies.data';
+import { readFirst, Selector } from './../../utils/readFirst.operator';
+
+import { PAGES, MoviesDataService } from './_mocks';
 import { store } from '../movies.store'; // not exported from index.ts
 
 import { MovieState } from './../';
@@ -21,7 +25,7 @@ describe('MovieStore', () => {
     it('should have API', () => {
       expect(store).toBeTruthy();
 
-      expect(store).toHaveMethods(['updateMovies', 'updateFilter', 'useQuery']);
+      expect(store).toHaveMethods(['updateMovies', 'updateFilter', 'updateStatus', 'useQuery', 'setLoading', 'reset']);
       expect(store).toHaveMethods(['selectPage', 'hasPage', 'pageInRange', 'addPage']);
     });
 
@@ -67,7 +71,29 @@ describe('MovieStore', () => {
     });
   });
 
+  describe('status', () => {
+    const findStatus = getRequestStatus('movies') as Selector<StatusState>;
+    const status = () => store.useQuery<StatusState>(findStatus).value;
+
+    it('should initialize as "idle"', () => {
+      const status = store.useQuery<StatusState>(findStatus);
+      expect(status.value).toBe('idle');
+    });
+
+    it('setLoading() should toggle status between "pending" or "idle"', () => {
+      store.setLoading();
+      expect(status()).toBe('pending');
+
+      store.setLoading(false);
+      expect(status()).toBe('idle');
+    });
+  });
+
   describe('updateMovides', () => {
+    const findStatus = getRequestStatus('movies') as Selector<StatusState>;
+    const status = () => store.useQuery<StatusState>(findStatus).value;
+    const api = new MoviesDataService();
+
     it('should update search and allMovies', () => {
       const findSearchCriteria = (s: MovieState) => s.searchBy;
       const findNumMoviesShown = (s: MovieState) => s.allMovies.length;
@@ -88,6 +114,7 @@ describe('MovieStore', () => {
       expect(store.state$).toEmit(page1.pagination.currentPage, findCurrentPage);
 
       // Add 2nd page
+      store.setLoading();
       store.updateMovies(page2.list, page2.pagination, 'canine');
 
       expect(store.state$).toEmit('canine', findSearchCriteria);
@@ -120,6 +147,26 @@ describe('MovieStore', () => {
       expect(store.state$).toEmit(1, findCurrentPage);
       expect(store.hasPage(1)).toBe(true);
       expect(store.hasPage(2)).toBe(false);
+    });
+
+    it('should set status == "success"', () => {
+      const { pagination, list } = readFirst(api.searchMovies('dogs', 1));
+
+      store.setLoading();
+      expect(status()).toBe('pending');
+
+      store.updateMovies(list, pagination);
+      expect(status()).toBe('success');
+    });
+
+    it('trackLoadStatus() should set status == "error" for API fails', () => {
+      store.setLoading();
+      expect(status()).toBe('pending');
+
+      const request$ = api.searchWithError('dogs', 1).pipe(trackLoadStatus);
+
+      readFirst(request$);
+      expect(status()).toBe('error');
     });
   });
 
