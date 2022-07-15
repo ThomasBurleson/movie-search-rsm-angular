@@ -4,20 +4,15 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule } from '@angular/forms';
 
-import { AppComponent, MovieCard, HeaderBar } from './components';
+import { AppComponent, MovieCard, HeaderBar, CheckGroup } from './components';
 import { HttpClientModule } from '@angular/common/http';
 
-import { MoviesFacade, MoviesDataService } from './data-access';
+import { MovieStore, MoviesFacade, MoviesDataService } from './data-access';
 
 @NgModule({
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    ReactiveFormsModule,
-    HttpClientModule,
-  ],
-  providers: [MoviesFacade, MoviesDataService],
-  declarations: [AppComponent, MovieCard, HeaderBar, PaginationBar],
+  imports: [BrowserModule, BrowserAnimationsModule, ReactiveFormsModule, HttpClientModule],
+  declarations: [AppComponent, MovieCard, HeaderBar, PaginationBar, CheckGroup],
+  providers: [MoviesFacade, MoviesDataService, MovieStore],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

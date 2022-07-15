@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable, throwError } from 'rxjs';
+
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { Pagination, MovieItem, MovieGenre } from './movies.model';
 
@@ -46,10 +48,16 @@ export class MoviesDataService {
    * @returns
    */
   loadGenres(): Observable<MovieGenre[]> {
-    const params = { headers: HEADERS_MOVIEDB };
-    const request$ = this.httpClient.get<RemoteMovieResponse>('https://api.themoviedb.org/4/genre/movie/list', params);
+    const url = 'https://api.themoviedb.org/3/genre/movie/list?api_key=13507fbbed7bd20be8713c10217b44e4&language=en-US';
+    const request$ = this.httpClient.get<RemoteMovieResponse>(url);
 
-    return request$.pipe(map((response) => response['genres']));
+    return request$.pipe(
+      map((response) => response['genres']),
+      map((list) => {
+        // convert all 'id' values to strings;
+        return list.map((it) => ({ ...it, id: String(it.id) }));
+      })
+    );
   }
 }
 

@@ -27,18 +27,16 @@ export class HeaderBar {
     const searchFor = this.form.controls['searchBy'];
 
     // When 'filterBy' input value changes, auto request filter update
-    filterBy.valueChanges
-      .pipe(debounceTime(250), distinctUntilChanged())
-      .subscribe((v) => {
-        this.onFilter.emit(v);
-      });
+    filterBy.valueChanges.pipe(debounceTime(250), distinctUntilChanged()).subscribe((v) => {
+      this.onFilter.emit(v);
+    });
 
     filterBy.setValue(this.filterBy);
     searchFor.setValue(this.searchFor);
   }
 
-  clearOnEscape(event: KeyboardEvent) {
-    if (event.keyCode === 27) {
+  clearOnEscape(event?: KeyboardEvent) {
+    if (!event || event.keyCode === 27) {
       const filterBy = this.form.controls['filterBy'];
       filterBy.setValue('');
     }

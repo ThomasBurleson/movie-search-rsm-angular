@@ -5,29 +5,31 @@ import { getRequestStatus, StatusState } from '@ngneat/elf-requests';
 import { MoviesDataService as MockMoviesAPI } from './_mocks';
 import { readFirst, Selector } from '../../utils';
 
-import { store } from '../movies.store';
+import { MovieStore } from '../movies.store';
 import { MovieState } from './../movies.model';
 import { MoviesFacade } from '../movies.facade';
 import { MoviesDataService } from '../movies.api';
 
 describe('MoviesFacade', () => {
+  let store: MovieStore;
   let facade: MoviesFacade;
   let api: MockMoviesAPI;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [CommonModule],
-      providers: [{ provide: MoviesDataService, useClass: MockMoviesAPI }, MoviesFacade],
+      providers: [{ provide: MoviesDataService, useClass: MockMoviesAPI }, MoviesFacade, MovieStore],
     });
 
-    facade = TestBed.inject(MoviesFacade);
     api = TestBed.inject(MoviesDataService) as unknown as MockMoviesAPI;
+    store = TestBed.inject(MovieStore);
+    facade = TestBed.inject(MoviesFacade);
   });
 
   it('instantiate', () => {
     expect(facade).toBeTruthy();
-    expect(facade).toHaveObservables(['vm$', 'status$']);
-    expect(facade).toHaveMethods(['loadMovies', 'updateFilter', 'showPage']);
+    expect(facade).toHaveObservables(['vm$', 'status$', 'isLoading$']);
+    expect(facade).toHaveMethods(['loadMovies', 'loadGenres', 'updateFilter', 'selectGenresById', 'showPage']);
   });
 
   it('should auto-load movies for "dogs"', () => {

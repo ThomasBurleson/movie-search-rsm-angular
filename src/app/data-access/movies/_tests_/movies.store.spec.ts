@@ -1,19 +1,18 @@
-import { trackLoadStatus } from './../movies.store';
 import { first } from 'rxjs/operators';
 import { getRequestStatus, StatusState } from '@ngneat/elf-requests';
 
 import { readFirst, Selector } from './../../utils/readFirst.operator';
 
 import { PAGES, MoviesDataService } from './_mocks';
-import { store } from '../movies.store'; // not exported from index.ts
 
-import { MovieState } from './../';
+import { MovieStore, MovieState } from './../';
 
 jest.useFakeTimers();
 
 describe('MovieStore', () => {
+  let store: MovieStore;
   beforeEach(() => {
-    store.reset();
+    store = new MovieStore();
   });
 
   describe('initialization', () => {
@@ -163,25 +162,11 @@ describe('MovieStore', () => {
       store.setLoading();
       expect(status()).toBe('pending');
 
-      const request$ = api.searchWithError('dogs', 1).pipe(trackLoadStatus);
+      const request$ = api.searchWithError('dogs', 1).pipe(store.trackLoadStatus);
 
       readFirst(request$);
       expect(status()).toBe('error');
     });
-  });
-
-  describe('filterBy', () => {
-    const selectFilterBy = (s: MovieState) => s.filterBy;
-    expect(store.useQuery(selectFilterBy)).toBe('');
-
-    const filterBy = 'siberian';
-    store.updateFilter(filterBy);
-    expect(store.useQuery(selectFilterBy)).toBe('siberian');
-    expect(store.state$).toEmit(filterBy, selectFilterBy);
-
-    store.reset();
-    expect(store.useQuery(selectFilterBy)).toBe('');
-    expect(store.state$).toEmit('', selectFilterBy);
   });
 
   describe('pagination', () => {
@@ -254,5 +239,19 @@ describe('MovieStore', () => {
       expect(store.selectPage(1)).toBe(true);
       expect(store.state$).toEmit(1, findCurrentPage);
     });
+  });
+
+  it('filterBy', () => {
+    const selectFilterBy = (s: MovieState) => s.filterBy;
+    expect(store.useQuery(selectFilterBy)).toBe('');
+
+    const filterBy = 'siberian';
+    store.updateFilter(filterBy);
+    expect(store.useQuery(selectFilterBy)).toBe('siberian');
+    expect(store.state$).toEmit(filterBy, selectFilterBy);
+
+    store.reset();
+    expect(store.useQuery(selectFilterBy)).toBe('');
+    expect(store.state$).toEmit('', selectFilterBy);
   });
 });
