@@ -36,7 +36,10 @@ export interface SelectableListVM<T extends Entity> {
 /**
  * 'SelectableList' is a Reactive EntityCollection that supports:
  *   - 0..n selections of items in a list.
- *   - status tracking for pending|success|idle|erro
+ *   - status tracking for pending|success|idle|error
+ *
+ *  NOTE: this class does NOT use [internally] a paginated store.
+ *        Pagination is not supported.
  */
 
 export class SelectableList<T extends Entity> {

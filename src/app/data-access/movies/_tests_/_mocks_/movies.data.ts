@@ -354,6 +354,8 @@ export const PAGINATED_RESPONSE: PaginatedMovieResponse = {
     total: 586,
     lastPage: 30,
     perPage: 20,
+    start: 0,
+    end: 20,
   },
   list: [
     {
@@ -704,7 +706,7 @@ function buildPageData(page: number): PaginatedMovieResponse {
   const start = (page - 1) * 5;
   const end = start + 5 - 1;
   return {
-    pagination: { total: 20, perPage: 5, lastPage: 4, currentPage: page },
+    pagination: { total: 20, perPage: 5, lastPage: 4, currentPage: page, start, end },
     list: PAGINATED_RESPONSE.list.slice(start, end),
   };
 }

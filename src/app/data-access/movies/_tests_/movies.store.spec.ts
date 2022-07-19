@@ -1,11 +1,10 @@
 import { first } from 'rxjs/operators';
 import { getRequestStatus, StatusState } from '@ngneat/elf-requests';
 
-import { readFirst, Selector } from './../../utils/readFirst.operator';
+import { readFirst, Selector } from '../../utils';
+import { PAGES, MoviesDataService } from './_mocks_';
 
-import { PAGES, MoviesDataService } from './_mocks';
-
-import { MovieStore, MovieState } from './../';
+import { MovieStore, MovieState } from '..';
 
 jest.useFakeTimers();
 
@@ -16,16 +15,10 @@ describe('MovieStore', () => {
   });
 
   describe('initialization', () => {
-    it('should have public properties', () => {
-      expect(store).toBeTruthy();
-      expect(store).toHaveObservables(['state$', 'status$']);
-    });
-
     it('should have API', () => {
       expect(store).toBeTruthy();
-
-      expect(store).toHaveMethods(['updateMovies', 'updateFilter', 'updateStatus', 'useQuery', 'setLoading', 'reset']);
-      expect(store).toHaveMethods(['selectPage', 'hasPage', 'pageInRange', 'addPage']);
+      expect(store).toHaveObservables(['state$', 'status$']);
+      expect(store).toHaveMethods(['updateMovies', 'updateFilter']);
     });
 
     it('should initialize with correct state', () => {
@@ -43,48 +36,6 @@ describe('MovieStore', () => {
         expect(s.filterBy).toBe(filterBy);
         expect(s.allMovies).toEqual(allMovies);
       });
-    });
-
-    it('should have pagination with 0 page', () => {
-      const state$ = store.state$.pipe(first());
-      state$.subscribe(({ pagination }: MovieState) => {
-        expect(store.hasPage(1)).toBeFalsy();
-
-        expect(pagination).toBeDefined();
-        expect(pagination.currentPage).toBe(0);
-        expect(pagination.total).toBe(0);
-        expect(pagination.perPage).toBe(0);
-        expect(pagination.lastPage).toBe(0);
-      });
-    });
-
-    it('should have pagination actions report fail', () => {
-      expect(store.selectPage(1)).toBe(false);
-      expect(store.selectPage(2)).toBe(false);
-
-      expect(store.hasPage(1)).toBe(false);
-      expect(store.hasPage(2)).toBe(false);
-
-      expect(store.pageInRange(1)).toBe(false);
-      expect(store.pageInRange(2)).toBe(false);
-    });
-  });
-
-  describe('status', () => {
-    const findStatus = getRequestStatus('movies') as Selector<StatusState>;
-    const status = () => store.useQuery<StatusState>(findStatus).value;
-
-    it('should initialize as "idle"', () => {
-      const status = store.useQuery<StatusState>(findStatus);
-      expect(status.value).toBe('idle');
-    });
-
-    it('setLoading() should toggle status between "pending" or "idle"', () => {
-      store.setLoading();
-      expect(status()).toBe('pending');
-
-      store.setLoading(false);
-      expect(status()).toBe('idle');
     });
   });
 
@@ -166,78 +117,6 @@ describe('MovieStore', () => {
 
       readFirst(request$);
       expect(status()).toBe('error');
-    });
-  });
-
-  describe('pagination', () => {
-    const findCurrentPage = (s: MovieState) => s.pagination.currentPage;
-
-    beforeEach(() => {
-      // Populate store with 2 pages of data
-      [0, 1].map((i) => {
-        store.updateMovies(PAGES[i].list, PAGES[i].pagination, 'dogs');
-      });
-    });
-
-    it('should report pages correctly', () => {
-      expect(store.hasPage(1)).toBe(true);
-      expect(store.hasPage(2)).toBe(true);
-      expect(store.hasPage(3)).toBe(false);
-      expect(store.hasPage(4)).toBe(false);
-
-      expect(store.state$).toEmit(2, findCurrentPage);
-      expect(store.selectPage(2)).toBe(true);
-    });
-
-    it('should addPage without changing currentPage', () => {
-      expect(store.hasPage(1)).toBe(true);
-      expect(store.hasPage(2)).toBe(true);
-      expect(store.hasPage(3)).toBe(false);
-
-      expect(store.state$).toEmit(2, findCurrentPage);
-
-      store.addPage(PAGES[2].list, 3);
-      expect(store.hasPage(3)).toBe(true);
-      expect(store.state$).toEmit(2, findCurrentPage);
-
-      store.selectPage(1);
-      expect(store.state$).toEmit(1, findCurrentPage);
-
-      store.addPage(PAGES[3].list, 4);
-      expect(store.hasPage(4)).toBe(true);
-      expect(store.state$).toEmit(1, findCurrentPage);
-    });
-
-    it('addPage should throw error for invalid page numbers', () => {
-      expect(store.hasPage(1)).toBe(true);
-      expect(store.hasPage(2)).toBe(true);
-      expect(store.hasPage(3)).toBe(false);
-
-      let errorMsg = '';
-      try {
-        // Note: pagination informatio (with total pages) is
-        // set in updateMovies() or
-        store.addPage(PAGES[2].list, 57);
-      } catch (e) {
-        errorMsg = e;
-      }
-      expect(errorMsg).not.toBe('');
-    });
-
-    it('addPage shoud not add page with empty list', () => {
-      expect(store.hasPage(1)).toBe(true);
-      expect(store.hasPage(2)).toBe(true);
-      expect(store.hasPage(3)).toBe(false);
-
-      store.addPage([], 3);
-      expect(store.hasPage(3)).toBe(false);
-    });
-
-    it('should selectPage correctly', () => {
-      expect(store.state$).toEmit(2, findCurrentPage);
-
-      expect(store.selectPage(1)).toBe(true);
-      expect(store.state$).toEmit(1, findCurrentPage);
     });
   });
 

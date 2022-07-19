@@ -31,7 +31,7 @@ export function useFilterBy(allMovies: MovieItem[], filterBy: string): MovieItem
 export function useFilterByGenre(list: MovieItem[], activeGenres: string[]): MovieItem[] {
   const hasMatchingGenre = (it: MovieItem) => {
     const isActiveGenre = (genreId: number) => activeGenres.some((id) => id === genreId.toString());
-    return !activeGenres.length || it.genre_ids.some(isActiveGenre);
+    return it.genre_ids.some(isActiveGenre);
   };
   return list.filter(hasMatchingGenre);
 }

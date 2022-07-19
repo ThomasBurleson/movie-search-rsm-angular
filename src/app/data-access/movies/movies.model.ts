@@ -1,9 +1,7 @@
-import { SelectableListVM } from './../utils/selectable-list';
 import { PaginationData } from '@ngneat/elf-pagination';
 import { StatusState } from '@ngneat/elf-requests';
 
-// Re-export Elf Pagination type
-export type Pagination = PaginationData;
+import { Pagination, SelectableListVM } from '../utils';
 
 export interface MovieItem extends Record<string, any> {
   id: string;
@@ -17,12 +15,6 @@ export interface MovieGenre {
   id: string;
   name: string;
 }
-
-/**
- * Selector to quickly determine isLoading state
- */
-export const isLoading = (s: StatusState) => s.value === 'pending';
-export { StatusState } from '@ngneat/elf-requests';
 
 /**
  * Uniquely identify Movie in *ngFor loops
@@ -60,9 +52,3 @@ export function initState(): MovieState {
     pagination: {} as Pagination,
   };
 }
-
-/**********************************************
- * Store API published for use by the Facade
- **********************************************/
-
-export type StoreSelector<T extends unknown> = (s: MovieState) => T;

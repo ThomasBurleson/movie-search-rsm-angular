@@ -2,11 +2,11 @@ import { CommonModule } from '@angular/common';
 import { async, TestBed } from '@angular/core/testing';
 import { getRequestStatus, StatusState } from '@ngneat/elf-requests';
 
-import { MoviesDataService as MockMoviesAPI } from './_mocks';
+import { MoviesDataService as MockMoviesAPI } from './_mocks_';
 import { readFirst, Selector } from '../../utils';
 
 import { MovieStore } from '../movies.store';
-import { MovieState } from './../movies.model';
+import { MovieState } from '../movies.model';
 import { MoviesFacade } from '../movies.facade';
 import { MoviesDataService } from '../movies.api';
 
@@ -50,10 +50,6 @@ describe('MoviesFacade', () => {
     const findStatus = getRequestStatus('movies') as Selector<StatusState>;
     const status = () => store.useQuery<StatusState>(findStatus).value;
 
-    it('should prefretch page 2 during autoload of page 1', () => {
-      expect(facade.vm$).toEmit(2, findNumPages);
-    });
-
     it('should prefretch next pages with using same "searchBy"', () => {
       const searchBy = readFirst(facade.vm$, findSearchBy);
 
@@ -63,7 +59,7 @@ describe('MoviesFacade', () => {
       facade.loadMovies(searchBy, 3);
       expect(facade.vm$).toEmit(3, findCurrentPage);
 
-      expect(status()).toBe('success');
+      expect(status()).toBe('idle');
     });
 
     it('should load more pages with using same "searchBy"', () => {
@@ -81,12 +77,12 @@ describe('MoviesFacade', () => {
       const subscription = facade.status$.subscribe((s) => changes.push(s.value));
 
       try {
-        expect(status()).toBe('success');
+        expect(status()).toBe('idle');
 
         facade.loadMovies('dogs', 3);
 
-        // Why 3? Existing "success" + loadMovies() generates 2 more...
-        expect(changes).toEqual(['success', 'pending', 'success']);
+        // Why 4? Existing "idles" + loadMovies() generates 3 more...
+        expect(changes).toEqual(['idle', 'pending', 'success', 'idle']);
       } finally {
         subscription.unsubscribe();
       }

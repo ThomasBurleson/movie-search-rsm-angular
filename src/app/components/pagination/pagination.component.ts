@@ -7,17 +7,15 @@ import { Pagination } from '../../data-access';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PaginationBar {
-  public selected = 0;
-  public start = 0;
-  public end = 0;
-  public total = 0;
+  @Input()
+  public pagination: Pagination;
   public pages = [1, 2, 3];
 
   /**
    * For the specified gotoToPage button, build a style
    */
   public stylePageLink(page: number): string {
-    const isSelected = this.selected === page + 1;
+    const isSelected = this.pagination.currentPage === page + 1;
     const buttonStyle = 'relative inline-flex items-center px-4 py-2 border text-sm font-medium';
     const selectionStyle = isSelected
       ? 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600'
@@ -25,14 +23,4 @@ export class PaginationBar {
 
     return selectionStyle + buttonStyle;
   }
-
-  @Input()
-  public set pagination({ total, currentPage, perPage }: Pagination) {
-    this.total = total;
-    this.selected = currentPage;
-    this.start = (currentPage - 1) * perPage;
-    this.end = Math.min(this.start + perPage, total);
-  }
-
-  @Output() onPageSelected = new EventEmitter<number>();
 }

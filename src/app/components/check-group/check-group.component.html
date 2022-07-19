@@ -1,5 +1,5 @@
 <div class="genres px-2 space-y-1 h-auto w-full border-dashed border-2 border-[#d3dce6] rounded-xl flex-1 pt-5 pb-4 mt-3 overflow-y-auto">
-  <div class="flex-shrink-0 flex items-center px-4 mt-3">
+  <div class="flex-shrink-0 flex items-center px-4 mt-3" (click)="onDeselectAll()">
     <a href="#">
       <img class="block h-8 w-auto" src="https://tailwindui.com/img/logos/workflow-mark.svg?color=gray&shade=600" alt="Workflow" />
     </a>
@@ -8,17 +8,20 @@
   <nav aria-label="Genres" class="mt-5 pt-5">
     <div class="px-2 space-y-1">
       <!-- Current: "bg-gray-100 text-gray-900", Default: "text-gray-600 hover:bg-gray-50 hover:text-gray-900" -->
-      <div class="relative flex items-start" *ngFor="let item of list; trackBy: trackById">
-        <div class="flex items-center h-5 px-4">
+      <div
+        *ngFor="let item of list; trackBy: trackById"
+        [class]="isHighlighted(item) ? 'relative flex items-start bg-lime-200' : 'relative flex items-start hover:bg-lime-200'"
+        (change)="onToggleSelect(item)"
+      >
+        <div class="flex items-center h-5 px-4 select-none">
           <input
             type="checkbox"
             [id]="item.id"
             [checked]="isSelected(item)"
-            (change)="onToggleSelect($event)"
             class="focus:ring-slate-400 h-4 w-4 text-slate-400 border-gray-300 rounded"
           />
         </div>
-        <div class="ml-3 text-sm">
+        <div class="ml-3 text-sm select-none">
           <label [for]="item.id" class="font-medium text-gray-700">{{ item.name }}</label>
         </div>
       </div>

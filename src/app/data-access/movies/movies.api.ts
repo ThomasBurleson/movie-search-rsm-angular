@@ -4,7 +4,8 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { Pagination, MovieItem, MovieGenre } from './movies.model';
+import { Pagination } from '../utils';
+import { MovieItem, MovieGenre } from './movies.model';
 
 // Formatted response for business layers
 export interface PaginatedMovieResponse {
@@ -66,11 +67,16 @@ export class MoviesDataService {
  */
 export function buildResponseFor(page = 1) {
   return function buildPaginatedResponses(data: RemoteMovieResponse): PaginatedMovieResponse {
+    const start = (page - 1) * data.results.length;
+    const end = Math.min(start + data.results.length, data.total_results);
+
     const pagination: Pagination = {
       currentPage: page,
       total: data.total_results,
       lastPage: data.total_pages,
       perPage: data.results.length,
+      start,
+      end,
     };
     return {
       pagination,
