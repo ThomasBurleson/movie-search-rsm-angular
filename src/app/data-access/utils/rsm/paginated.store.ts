@@ -173,13 +173,14 @@ export class PaginatedStore<T extends unknown, K extends { id: string }> {
   /**
    * Add page of movies WITHOUT changing active page or pagination information
    */
-  addPage(items: K[], page: number) {
+  addPage(items: K[], page: number, updatePagination = true) {
     if (items.length) {
+      const current: PaginationData = { ...this._store.query(getPaginationData()) };
       const data = buildPaginationData(this._store, items, page);
 
       this._store.update(
         upsertEntities(items),
-        updatePaginationData(data),
+        updatePaginationData(updatePagination ? data : current),
         setPage(
           page,
           items.map((it) => it.id)

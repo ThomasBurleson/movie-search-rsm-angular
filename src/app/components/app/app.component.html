@@ -1,18 +1,16 @@
 <div
   *ngIf="vm$ | async as vm"
-  class="relative p-3 pr-6 grid grid-flow-row auto-rows-min place-items-top min-h-screen justify-items-center w-full"
+  class="p-3"
 >
-  <div class="grid grid-cols-4 gap-4 w-full h-full">
-    <div class="col-start-1 col-span-3">
-      <header-bar
-        [searchFor]="vm.searchBy"
-        [filterBy]="vm.filterBy"
-        (onLoad)="vm.searchMovies($event)"
-        (onFilter)="vm.updateFilter($event)"
-        (onClear)="vm.updateFilter('')"
-      ></header-bar>
+  <header-bar
+    [searchFor]="vm.searchBy"
+    (onLoad)="vm.searchMovies($event)"
+  ></header-bar>
+
+  <div class="grid sm:grid-cols-3 lg:grid-cols-4 gap-8 w-full h-full">
+    <div class="sm:col-span-2 lg:col-span-3">
       <div
-        class="p-4 pt-3 max-w-5xl grid gap-4 sm:grid-cols-2 span-col-3 overflow-y-auto max-h-[958px] w-full"
+        class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[632px] overflow-y-auto p-1"
       >
         <movie-card 
           *ngFor="let it of vm.filteredMovies; trackBy: trackByKey" 
@@ -20,14 +18,25 @@
       </div>
       <pagination-bar 
         [pagination]="vm.pagination"         
-        class="p-4 pt-3 w-[800px]"></pagination-bar>
+        class="block pt-4"></pagination-bar>
     </div>
-    <check-group 
-      title="Genres" 
-      [list]="vm.genres.list" 
-      [selected]="vm.genres.selected" 
-      [highlighted]="highlightedGenres"
-      (onSelectionChange)="vm.selectGenresById($event)">
-    </check-group>
+
+    <div class="col-span-1">
+      <div class="genres px-2 space-y-1 w-full border-dashed border-2 border-[#d3dce6] rounded-xl flex-1 mb-2 -ml-2">
+        <filter-input
+          [filterBy]="vm.filterBy"
+          (onFilter)="vm.updateFilter($event)"
+          (onClear)="vm.updateFilter('')"
+          class="block pt-4"
+        ></filter-input>
+      </div>
+      <check-group 
+        title="Genres" 
+        [list]="vm.genres.list" 
+        [selected]="vm.genres.selected" 
+        [highlighted]="highlightedGenres"
+        (onSelectionChange)="vm.selectGenresById($event)">
+      </check-group>
+    </div>
   </div>
 </div>

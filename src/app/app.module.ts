@@ -4,14 +4,14 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule } from '@angular/forms';
 
-import { AppComponent, MovieCard, HeaderBar, CheckGroup } from './components';
+import { AppComponent, MovieCard, HeaderBar, FilterInput, CheckGroup } from './components';
 import { HttpClientModule } from '@angular/common/http';
 
 import { MovieStore, MoviesFacade, MoviesDataService } from './data-access';
 
 @NgModule({
   imports: [BrowserModule, BrowserAnimationsModule, ReactiveFormsModule, HttpClientModule],
-  declarations: [AppComponent, MovieCard, HeaderBar, PaginationBar, CheckGroup],
+  declarations: [AppComponent, MovieCard, HeaderBar, FilterInput, PaginationBar, CheckGroup],
   providers: [MoviesFacade, MoviesDataService, MovieStore],
   bootstrap: [AppComponent],
 })

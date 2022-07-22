@@ -175,7 +175,7 @@ export class MoviesFacade {
     if (this._store.pageInRange(page)) {
       const request$ = this._api.searchMovies(searchBy, page);
       request$.subscribe(({ list }: PaginatedMovieResponse) => {
-        this._store.addPage(list, page);
+        this._store.addPage(list, page, false);
       });
     }
   }
