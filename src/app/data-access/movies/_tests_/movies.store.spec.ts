@@ -1,3 +1,4 @@
+import { PaginatedMovieResponse } from './../movies.api';
 import { first } from 'rxjs/operators';
 import { getRequestStatus, StatusState } from '@ngneat/elf-requests';
 
@@ -100,7 +101,7 @@ describe('MovieStore', () => {
     });
 
     it('should set status == "success"', () => {
-      const { pagination, list } = readFirst(api.searchMovies('dogs', 1));
+      const { pagination, list } = readFirst<PaginatedMovieResponse>(api.searchMovies('dogs', 1));
 
       store.setLoading();
       expect(status()).toBe('pending');
@@ -113,7 +114,7 @@ describe('MovieStore', () => {
       store.setLoading();
       expect(status()).toBe('pending');
 
-      const request$ = api.searchWithError('dogs', 1).pipe(store.trackLoadStatus);
+      const request$ = api.searchWithError('dogs', 1).pipe(store.trackLoadStatus());
 
       readFirst(request$);
       expect(status()).toBe('error');

@@ -1,4 +1,5 @@
-import { Observable } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { EMPTY, Observable } from 'rxjs';
 import { map, withLatestFrom } from 'rxjs/operators';
 
 import { emitOnce } from '@ngneat/elf';
@@ -8,7 +9,6 @@ import { updatePaginationData, setPage, setCurrentPage, selectCurrentPageEntitie
 
 import { Pagination, PaginatedStore } from '../utils/rsm';
 import { initState, MovieItem, MovieState } from './movies.model';
-import { computeFilteredMovies } from './movies.filters';
 import { readFirst } from '../utils';
 
 const MOVIES = 'movies';
@@ -16,9 +16,10 @@ const MOVIES = 'movies';
 /**
  * Reactive Store for 'movies'
  */
+@Injectable()
 export class MovieStore extends PaginatedStore<MovieState, MovieItem> {
   public movies$: Observable<MovieItem[]>;
-  public state$: Observable<MovieState>;
+  public override state$: Observable<MovieState> = EMPTY;
 
   constructor() {
     super('movies', initState);
@@ -30,7 +31,6 @@ export class MovieStore extends PaginatedStore<MovieState, MovieItem> {
         return {
           ...state,
           allMovies,
-          filteredMovies: computeFilteredMovies(allMovies, state.filterBy),
           pagination: readFirst(this.pagination$),
         };
       })

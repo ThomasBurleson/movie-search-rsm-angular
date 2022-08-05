@@ -14,9 +14,10 @@ export class AppComponent {
   trackByKey = findMovieId;
   highlightedGenres: number[];
 
-  vm$: Observable<MovieViewModel> = this.facade.vm$;
+  vm$: Observable<MovieViewModel>;
 
   constructor(private facade: MoviesFacade, private route: ActivatedRoute) {
+    this.vm$ = this.facade.vm$;
     this.loadFromBookmark();
   }
 

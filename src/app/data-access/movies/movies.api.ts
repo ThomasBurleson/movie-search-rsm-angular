@@ -77,7 +77,8 @@ export function buildResponseFor(page = 1) {
       perPage: data.results.length,
       start,
       end,
-    };
+    } as Pagination;
+
     return {
       pagination,
       list: data['results'],

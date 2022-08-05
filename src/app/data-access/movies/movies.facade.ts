@@ -1,33 +1,15 @@
 import { Injectable } from '@angular/core';
-import { Observable, combineLatest, of } from 'rxjs';
+import { Params, ActivatedRoute, Router } from '@angular/router';
+
+import { UnaryFunction, Observable, combineLatest, of, pipe } from 'rxjs';
 import { take, map, skip, tap } from 'rxjs/operators';
 
-import { StatusState, SelectableList, SelectableListVM, readFirst } from './../utils';
+import { useFilterByGenre, computeFilteredMovies } from './movies.filters';
+import { StatusState, ReactiveList, ReactiveListVM, readFirst } from '../utils';
 
 import { MovieStore } from './movies.store';
-import { useFilterByGenre } from './movies.filters';
 import { MoviesDataService, PaginatedMovieResponse } from './movies.api';
-import { MovieState, MovieComputedState, MovieGenreState, MovieGenre, MovieItem } from './movies.model';
-import { ActivatedRoute, Router } from '@angular/router';
-import { UntilDestroy } from '@ngneat/until-destroy';
-import { Params } from '@angular/router';
-
-/**********************************************
- * ViewModel published to UI layers (from Facade)
- **********************************************/
-
-/**
- * This is a simple API meant for use within the
- * UI layer html templates
- */
-export interface MovieAPI {
-  updateFilter: (filterBy: string) => void;
-  searchMovies: (searchBy: string) => void;
-  selectGenresById: (selectedIDs: string[]) => void;
-  clearFilter: () => void;
-}
-
-export type MovieViewModel = MovieState & MovieComputedState & MovieGenreState & MovieAPI;
+import { MovieState, MovieComputedState, MovieGenre, MovieItem, MovieViewModel } from './movies.model';
 
 /**
  * Load movies and cache results for similar future calls.
@@ -36,24 +18,25 @@ export type MovieViewModel = MovieState & MovieComputedState & MovieGenreState &
  *       UI <-> ViewModel <-> Facade <-> Store
  *                                 |-->  DataService
  */
-@UntilDestroy()
 @Injectable()
 export class MoviesFacade {
   public vm$: Observable<MovieViewModel>;
   public status$: Observable<StatusState>;
   public isLoading$: Observable<boolean>;
 
-  private _genre: SelectableList<MovieGenre>;
+  private _genre: ReactiveList<MovieGenre>;
 
   constructor(private _store: MovieStore, private _api: MoviesDataService, private route: ActivatedRoute, private router: Router) {
     const state$ = _store.state$.pipe(tap((s) => this.updateRoute(s))); // sync routes params to current state values
 
     // We manage this directly BECAUSE the movies shown are affected by genre selection
-    this._genre = new SelectableList<MovieGenre>('genres');
+    this._genre = new ReactiveList<MovieGenre>('genres');
 
     this.status$ = _store.status$; // may contain error informatoin
     this.isLoading$ = _store.isLoading$.pipe(tap((busy) => console.log(`isLoading = ${busy}`)));
-    this.vm$ = combineLatest([state$, this._genre.vm$]).pipe(map(this.addViewModelAPI.bind(this)));
+
+    // Create a view model that is a combination of the store state + computed values + api
+    this.vm$ = combineLatest([state$, this._genre.vm$]).pipe(this.addComputedState(), this.addViewModelAPI());
   }
 
   /**
@@ -73,7 +56,7 @@ export class MoviesFacade {
       genres$.subscribe(() => {
         this._api
           .searchMovies(searchBy, page)
-          .pipe(this._store.trackLoadStatus)
+          .pipe(this._store.trackLoadStatus())
           .subscribe((response: PaginatedMovieResponse) => {
             const { list, pagination } = response;
             this._store.updateMovies(list, pagination, searchBy, filterBy);
@@ -102,6 +85,11 @@ export class MoviesFacade {
   // Genre features
   // *******************************************************
 
+  selectGenresById(selectedIds: string[], clearOthers = true): Observable<ReactiveListVM<MovieGenre>> {
+    this._genre.selectItemsById(selectedIds, clearOthers);
+    return this._genre.vm$;
+  }
+
   /**
    * Load list of all movie genres
    * @see `vm.genres` or `store.state$.genres`
@@ -113,11 +101,6 @@ export class MoviesFacade {
         return this._genre.addItems(list, true);
       })
     );
-  }
-
-  selectGenresById(selectedIds: string[], clearOthers = true): Observable<SelectableListVM<MovieGenre>> {
-    this._genre.selectItemsById(selectedIds, clearOthers);
-    return this._genre.vm$;
   }
 
   // *******************************************************
@@ -164,7 +147,7 @@ export class MoviesFacade {
     });
     allGenreIds = [...new Set(allGenreIds)]; // only unique ids; no duplicates
 
-    this._genre.selectItemsById(allGenreIds, true);
+    this._genre.selectItemsById(allGenreIds.map(String), true);
   }
 
   /**
@@ -181,30 +164,58 @@ export class MoviesFacade {
   }
 
   /**
-   * Inject the Facade combineLatest proxy API into view model
+   * Add computed property `filteredMovies` to state
+   * This property is actually two (2) filters: using filterBy and selected genres
+   *
+   * NOTE: this returns an rxjs-like 'operator' function; not an observable
    */
-  private addViewModelAPI([state, genres]: [MovieState & MovieComputedState, SelectableListVM<MovieGenre>]): MovieViewModel {
-    const selectedIDs = genres.selected.map((it) => it.id);
-    const api = {
-      searchMovies: this.loadMovies.bind(this),
-      selectGenresById: this.selectGenresById.bind(this),
-      clearFilter: () => this.updateFilter(''),
-      updateFilter: this.updateFilter.bind(this),
-    };
+  private addComputedState(): UnaryFunction<
+    Observable<[MovieState, ReactiveListVM<MovieGenre>]>,
+    Observable<[MovieState & MovieComputedState, ReactiveListVM<MovieGenre>]>
+  > {
+    return pipe(
+      map(([state, genres]) => {
+        const selectedIDs = genres.selected.map((it) => it.id);
+        const filteredMovies = computeFilteredMovies(state.allMovies, state.filterBy);
+        const filteredByGenre = useFilterByGenre(filteredMovies, selectedIDs);
+        return [
+          {
+            ...state,
+            filteredMovies: filteredByGenre,
+          },
+          genres,
+        ];
+      })
+    );
+  }
 
-    // Since Movies aviailable are [by default] based on 'filterBy' criteria
-    // let's also add an extra filter based on selected Genres
-    const filteredMovies = useFilterByGenre(state.filteredMovies, selectedIDs);
+  /**
+   * Add the view model proxy API to the state
+   * NOTE: this returns an rxjs-like 'operator' function; not an observable
+   */
+  private addViewModelAPI(): UnaryFunction<
+    Observable<[MovieState & MovieComputedState, ReactiveListVM<MovieGenre>]>,
+    Observable<MovieViewModel>
+  > {
+    return pipe(
+      map(([state, genres]) => {
+        const api = {
+          searchMovies: this.loadMovies.bind(this),
+          selectGenresById: this.selectGenresById.bind(this),
+          clearFilter: () => this.updateFilter(''),
+          updateFilter: this.updateFilter.bind(this),
+        };
 
-    // Override default showPage with custom functionality to prefetch next page
-    state.pagination.showPage = this.showPage.bind(this);
+        // !! Override default showPage with custom functionality to prefetch next page
+        state.pagination.showPage = this.showPage.bind(this);
 
-    return {
-      ...state,
-      ...api,
-      genres,
-      filteredMovies,
-    };
+        return {
+          ...state,
+          ...api,
+          genres,
+        };
+      })
+    );
   }
 
   // ***************************************************************

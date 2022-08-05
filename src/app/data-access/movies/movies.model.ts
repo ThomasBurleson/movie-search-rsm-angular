@@ -1,7 +1,7 @@
 import { PaginationData } from '@ngneat/elf-pagination';
 import { StatusState } from '@ngneat/elf-requests';
 
-import { Pagination, SelectableListVM } from '../utils';
+import { Pagination, ReactiveListVM } from '../utils';
 
 export interface MovieItem extends Record<string, any> {
   id: string;
@@ -41,7 +41,7 @@ export interface MovieComputedState {
 }
 
 export interface MovieGenreState {
-  genres: SelectableListVM<MovieGenre>;
+  genres: ReactiveListVM<MovieGenre>;
 }
 
 export function initState(): MovieState {
@@ -52,3 +52,20 @@ export function initState(): MovieState {
     pagination: {} as Pagination,
   };
 }
+
+/**********************************************
+ * ViewModel published to UI layers (from Facade)
+ **********************************************/
+
+/**
+ * This is a simple API meant for use within the
+ * UI layer html templates
+ */
+export interface MovieAPI {
+  updateFilter: (filterBy: string) => void;
+  searchMovies: (searchBy: string) => void;
+  selectGenresById: (selectedIDs: string[]) => void;
+  clearFilter: () => void;
+}
+
+export type MovieViewModel = MovieState & MovieComputedState & MovieGenreState & MovieAPI;

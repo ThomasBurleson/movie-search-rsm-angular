@@ -1,18 +1,19 @@
-import { getRequestStatus, StatusState } from '@ngneat/elf-requests';
-
-import { Pagination } from '../rsm/paginated.store';
-import { ListItem, DATA } from './_data_/list-item.data';
-import { readFirst, Selector } from '..';
-import { PaginatedStore } from '..';
+import { readFirst } from '../utils';
+import { StoreState } from './store.model';
+import { PaginatedStore, PaginationProps } from './paginated.store';
+import {
+  ListItem,
+  DATA,
+} from '../../../../test-utils/mocks/app/rsm/reactive-list/list-item.data';
 
 jest.useFakeTimers();
 
 const STORE_NAME = 'myStore';
-interface StoreState {
+interface MyStoreState extends StoreState {
   user: string;
 }
 
-class MyStore extends PaginatedStore<StoreState, ListItem> {
+class MyStore extends PaginatedStore<MyStoreState, ListItem> {
   constructor() {
     super(STORE_NAME, () => ({ user: '' }));
   }
@@ -48,9 +49,13 @@ describe('PaginatedStore', () => {
     it('should have API', () => {
       expect(store).toBeTruthy();
 
-      expect(store).toHaveMethods(['updateStatus', 'useQuery', 'setLoading', 'reset']);
-      expect(store).toHaveMethods(['selectPage', 'hasPage', 'pageInRange', 'addPage']);
-      expect(store).not.toHaveObservables(['state$']);
+      expect(store).toHaveMethods([
+        'selectPage',
+        'hasPage',
+        'pageInRange',
+        'addPage',
+      ]);
+      expect(store).toHaveObservables(['pagination$']);
     });
 
     it('should initialize with correct state', () => {
@@ -61,7 +66,7 @@ describe('PaginatedStore', () => {
 
     it('should have pagination with 0 page', () => {
       const pagination$ = store.pagination$;
-      const pagination = readFirst<Pagination>(store.pagination$);
+      const pagination = readFirst<PaginationProps>(store.pagination$);
 
       expect(pagination).toBeDefined();
       expect(pagination.currentPage).toBe(0);
@@ -88,26 +93,8 @@ describe('PaginatedStore', () => {
     });
   });
 
-  describe('status', () => {
-    const findStatus = getRequestStatus(STORE_NAME) as Selector<StatusState>;
-    const status = () => store.useQuery<StatusState>(findStatus).value;
-
-    it('should initialize as "idle"', () => {
-      const status = store.useQuery<StatusState>(findStatus);
-      expect(status.value).toBe('idle');
-    });
-
-    it('setLoading() should toggle status between "pending" or "idle"', () => {
-      store.setLoading();
-      expect(status()).toBe('pending');
-
-      store.setLoading(false);
-      expect(status()).toBe('idle');
-    });
-  });
-
   describe('pagination', () => {
-    const findCurrentPage = (s: Pagination) => s.currentPage;
+    const findCurrentPage = (s: PaginationProps) => s.currentPage;
 
     beforeEach(() => {
       [1, 2].map((page) => {

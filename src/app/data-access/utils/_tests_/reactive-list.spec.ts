@@ -1,20 +1,20 @@
-import { SelectableList, SelectableListVM } from '../rsm/selectable-list';
+import { ReactiveList, ReactiveListVM } from '../rsm/reactive-list';
 
 import { ListItem, DATA } from './_data_/list-item.data';
 
 jest.useFakeTimers();
 
-describe('SelectableList<ListItem>', () => {
-  const findList = (vm: SelectableListVM<ListItem>) => vm.list;
-  const findSelected = (vm: SelectableListVM<ListItem>) => vm.selected;
-  const findListLength = (vm) => findList(vm).length;
-  const findSelectedLength = (vm) => findSelected(vm).length;
-  const findStatusValue = (vm) => vm.status.value;
+describe('ReactiveList<ListItem>', () => {
+  const findList = (vm: ReactiveListVM<ListItem>) => vm.list;
+  const findSelected = (vm: ReactiveListVM<ListItem>) => vm.selected;
+  const findListLength = (vm: ReactiveListVM<ListItem>) => findList(vm).length;
+  const findSelectedLength = (vm: ReactiveListVM<ListItem>) => findSelected(vm).length;
+  const findStatusValue = (vm: ReactiveListVM<ListItem>) => vm.status.value;
 
-  let selectable: SelectableList<ListItem>;
+  let selectable: ReactiveList<ListItem>;
 
   beforeEach(() => {
-    selectable = new SelectableList<ListItem>('genres');
+    selectable = new ReactiveList<ListItem>('genres');
   });
 
   describe('initialization', () => {

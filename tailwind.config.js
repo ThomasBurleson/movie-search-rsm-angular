@@ -2,7 +2,6 @@ const { join } = require('path');
 const plugin = require('tailwindcss/plugin');
 
 module.exports = {
-  mode: 'jit',
   content: [join(__dirname, 'src/**/!(*.stories|*.spec).{ts,html}')],
   theme: {
     extend: {
