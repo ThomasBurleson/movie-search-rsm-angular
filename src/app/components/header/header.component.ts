@@ -8,7 +8,10 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   templateUrl: './header.component.html',
 })
 export class HeaderBar {
-  @Input() searchFor: string;
+  @Input() set searchFor(val: string) {
+    const searchFor = this.form.controls['searchBy'];
+    searchFor.setValue(val);
+  }
 
   @Output() onLoad = new EventEmitter<string>();
   @Output() onClear = new EventEmitter<void>();
@@ -19,10 +22,4 @@ export class HeaderBar {
   });
 
   constructor(private fb: FormBuilder) {}
-
-  ngOnInit() {
-    const searchFor = this.form.controls['searchBy'];
-
-    searchFor.setValue(this.searchFor);
-  }
 }

@@ -46,7 +46,7 @@ export interface MovieGenreState {
 
 export function initState(): MovieState {
   return {
-    searchBy: 'dogs',
+    searchBy: '',
     filterBy: '',
     allMovies: [],
     pagination: {} as Pagination,

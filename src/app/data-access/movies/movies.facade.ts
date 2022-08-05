@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, combineLatest, of } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { take, map, skip, tap } from 'rxjs/operators';
 
 import { StatusState, SelectableList, SelectableListVM, readFirst } from './../utils';
 
@@ -8,6 +8,9 @@ import { MovieStore } from './movies.store';
 import { useFilterByGenre } from './movies.filters';
 import { MoviesDataService, PaginatedMovieResponse } from './movies.api';
 import { MovieState, MovieComputedState, MovieGenreState, MovieGenre, MovieItem } from './movies.model';
+import { ActivatedRoute, Router } from '@angular/router';
+import { UntilDestroy } from '@ngneat/until-destroy';
+import { Params } from '@angular/router';
 
 /**********************************************
  * ViewModel published to UI layers (from Facade)
@@ -33,6 +36,7 @@ export type MovieViewModel = MovieState & MovieComputedState & MovieGenreState &
  *       UI <-> ViewModel <-> Facade <-> Store
  *                                 |-->  DataService
  */
+@UntilDestroy()
 @Injectable()
 export class MoviesFacade {
   public vm$: Observable<MovieViewModel>;
@@ -41,19 +45,15 @@ export class MoviesFacade {
 
   private _genre: SelectableList<MovieGenre>;
 
-  constructor(private _store: MovieStore, private _api: MoviesDataService) {
-    const searchBy = _store.useQuery((s) => s.searchBy);
+  constructor(private _store: MovieStore, private _api: MoviesDataService, private route: ActivatedRoute, private router: Router) {
+    const state$ = _store.state$.pipe(tap((s) => this.updateRoute(s))); // sync routes params to current state values
 
-    // We manage this directly BECAUSE 'genre' store 'selected' changes filter
-    // the movies shown/visible.
+    // We manage this directly BECAUSE the movies shown are affected by genre selection
     this._genre = new SelectableList<MovieGenre>('genres');
 
     this.status$ = _store.status$; // may contain error informatoin
     this.isLoading$ = _store.isLoading$.pipe(tap((busy) => console.log(`isLoading = ${busy}`)));
-    this.vm$ = combineLatest([_store.state$, this._genre.vm$]).pipe(map(this.addViewModelAPI.bind(this)));
-
-    // Load initial movies based on default state values
-    this.loadMovies(searchBy);
+    this.vm$ = combineLatest([state$, this._genre.vm$]).pipe(map(this.addViewModelAPI.bind(this)));
   }
 
   /**
@@ -63,20 +63,20 @@ export class MoviesFacade {
    * Auto-save to cache; based on specified search keys
    * Also smart prefetch next page...
    */
-  loadMovies(searchBy: string, page = 1): Observable<MovieViewModel> {
+  loadMovies(searchBy: string, page = 1, filterBy = ''): Observable<MovieViewModel> {
     if (!!searchBy) {
       this._store.setLoading(true);
 
       const genres$ = this._genre.total > 0 ? of([]) : this.loadGenres();
 
       // Once genres are loaded, then perform movie search
-      genres$.subscribe((list: any) => {
+      genres$.subscribe(() => {
         this._api
           .searchMovies(searchBy, page)
           .pipe(this._store.trackLoadStatus)
           .subscribe((response: PaginatedMovieResponse) => {
             const { list, pagination } = response;
-            this._store.updateMovies(list, pagination, searchBy);
+            this._store.updateMovies(list, pagination, searchBy, filterBy);
             this.prefetchPage(searchBy, page + 1);
 
             this.autoSelectGenres(list);
@@ -205,5 +205,41 @@ export class MoviesFacade {
       genres,
       filteredMovies,
     };
+  }
+
+  // ***************************************************************
+  // Router Integration
+  // ***************************************************************
+
+  /**
+   * Watch Route params if current state does not match,
+   * this trigger actions and possible reload movies...
+   */
+  public loadFromRoute(params$: Observable<Params>) {
+    params$.pipe(skip(1), take(1)).subscribe((params: Params) => {
+      let { searchBy, filterBy, currentPage } = params;
+      if (!!searchBy) {
+        this.loadMovies(searchBy, parseInt(currentPage) || 1, filterBy);
+      }
+    });
+  }
+
+  /**
+   * Always keep the URL synchronized with current state params
+   */
+  private updateRoute({ pagination, searchBy, filterBy }: MovieState) {
+    const { currentPage } = pagination;
+    const queryParams = { searchBy, filterBy, currentPage };
+
+    if (!!searchBy) {
+      if (!filterBy) delete queryParams.filterBy;
+      if (!currentPage) delete queryParams.currentPage;
+
+      this.router.navigate([], {
+        queryParams,
+        relativeTo: this.route,
+        replaceUrl: true,
+      });
+    }
   }
 }

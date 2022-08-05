@@ -44,13 +44,15 @@ export class MovieStore extends PaginatedStore<MovieState, MovieItem> {
   /**
    * Set cache and page information for remote search
    */
-  updateMovies(movies: MovieItem[], paging: Partial<Pagination>, searchBy?: string) {
+  updateMovies(movies: MovieItem[], paging: Partial<Pagination>, searchBy?: string, filterBy?: string) {
     const hasSearchBy = searchBy !== undefined && searchBy !== null;
     const clearCache = hasSearchBy ? this._store.query((s) => s.searchBy) !== searchBy : false;
-    const updateSearchBy = (state) => ({
-      ...state,
-      searchBy: hasSearchBy ? searchBy : state.searchBy,
-    });
+    const updateSearchBy = (state) => {
+      return {
+        ...state,
+        searchBy: hasSearchBy ? searchBy : state.searchBy,
+      };
+    };
 
     emitOnce(() => {
       const pagination = { ...readFirst<Pagination>(this.pagination$), ...paging };
@@ -70,6 +72,7 @@ export class MovieStore extends PaginatedStore<MovieState, MovieItem> {
         ),
         setCurrentPage(paging.currentPage)
       );
+      if (!!filterBy) this.updateFilter(filterBy);
     });
   }
 

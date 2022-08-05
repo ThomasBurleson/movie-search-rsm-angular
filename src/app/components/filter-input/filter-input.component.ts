@@ -8,7 +8,10 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   templateUrl: './filter-input.component.html',
 })
 export class FilterInput {
-  @Input() filterBy: string;
+  @Input() set filterBy(val: string) {
+    const filterBy = this.form.controls['filterBy'];
+    filterBy.setValue(val);
+  }
 
   @Output() onFilter = new EventEmitter<string>();
 
@@ -26,8 +29,6 @@ export class FilterInput {
     filterBy.valueChanges.pipe(debounceTime(250), distinctUntilChanged()).subscribe((v) => {
       this.onFilter.emit(v);
     });
-
-    filterBy.setValue(this.filterBy);
   }
 
   clearOnEscape(event?: KeyboardEvent) {
