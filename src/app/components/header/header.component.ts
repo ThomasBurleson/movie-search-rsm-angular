@@ -42,5 +42,10 @@ export class HeaderBar {
       const filterBy = this.form.controls['filterBy'];
       filterBy.setValue('');
     }
+
+    if (event.key === 'Enter') {
+      event.stopImmediatePropagation();
+      event.preventDefault();
+    }
   }
 }

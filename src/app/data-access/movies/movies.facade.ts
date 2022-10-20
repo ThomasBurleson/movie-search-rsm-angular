@@ -11,7 +11,11 @@ import {
   MovieState,
   MovieViewModel,
 } from './movies.model';
-import { movieStateReducer, actions } from './movies.reducer';
+import {
+  movieStateReducer,
+  actions,
+  computeFilteredMovies,
+} from './movies.reducer';
 
 /**
  * Load movies and cache results for similar future calls.j
@@ -35,7 +39,8 @@ export class MoviesFacade {
       return produce<MovieState>(
         this.state,
         (s: MovieState): MovieViewModel => {
-          return { ...s, ...api };
+          const filteredMovies = computeFilteredMovies(s);
+          return { ...s, ...api, filteredMovies };
         }
       ) as MovieViewModel;
     };

@@ -7,7 +7,11 @@ import { pluck, tap } from 'rxjs';
 export class MoviesDataService {
   constructor(private httpClient: HttpClient) {}
 
-  searchByAuthor<TResult extends unknown>(term: string, date: string, author: string) {
+  searchByAuthor<TResult extends unknown>(
+    term: string,
+    date: string,
+    author: string
+  ) {
     term = `${term}&date=${date}&author=${author}`;
     return this.searchMovies<TResult>(term, 1);
   }
@@ -17,11 +21,14 @@ export class MoviesDataService {
       params: { query: term, page: page + 1 },
       headers: {
         Authorization:
-          'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI4MDMwNTJkZWRmMGJkOGViODk2OWEzYWJkMzE2YjQ3NCIsInN1YiI6IjYyMGYwYzQxM2Y0ODMzMDA0NDYzNTdkYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.9H4bwPC-X6VN-YZ-HGX5ynw5alHJxuvnlNTypol67VU',
+          'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxMzUwN2ZiYmVkN2JkMjBiZTg3MTNjMTAyMTdiNDRlNCIsInN1YiI6IjYyY2YyNzhjNmRjNTA3MDA1NDY3ZGM3YSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.gNrKzUpRaTHGeiKBTW_rAfq-HMy21rmxJiCBvrBllfY',
         'Content-Type': 'application/json;charset=utf-8',
       },
     };
-    const request$ = this.httpClient.get<{ results: TResult }>('https://api.themoviedb.org/4/search/movie', params);
+    const request$ = this.httpClient.get<{ results: TResult }>(
+      'https://api.themoviedb.org/4/search/movie',
+      params
+    );
 
     return request$.pipe(pluck('results'));
   }
