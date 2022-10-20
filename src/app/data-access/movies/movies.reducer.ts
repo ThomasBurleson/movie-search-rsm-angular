@@ -1,7 +1,10 @@
 import { produce } from 'immer';
 
 import { MovieState, MovieItem } from './movies.model';
-import { buildMatchIndicator, computeFilteredMovies } from './movies.filters';
+import {
+  buildMatchIndicator,
+  computeFilteredMovies as useFilterBy,
+} from './movies.filters';
 
 interface Action {
   type: string;
@@ -57,9 +60,16 @@ export function movieStateReducer(
         draft.filterBy = action.filterBy;
         break;
     }
-    const movies = computeFilteredMovies(draft);
-    const addMatchIndicators = buildMatchIndicator(draft.filterBy);
-
-    draft.filteredMovies = addMatchIndicators(movies);
   });
+}
+
+/**
+ * Why are computed properties valuable, calculated on-demand
+ * and NOT serialized.
+ */
+export function computeFilteredMovies(state: MovieState): MovieItem[] {
+  const movies = useFilterBy(state);
+  const addMatchIndicators = buildMatchIndicator(state.filterBy);
+
+  return addMatchIndicators(movies);
 }

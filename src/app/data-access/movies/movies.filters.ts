@@ -14,7 +14,7 @@ const contentHasMatch = (filterBy: string) => {
 export function computeFilteredMovies({
   allMovies,
   filterBy,
-}: MovieState): MovieItem[] {
+}: Partial<MovieState>): MovieItem[] {
   const hasMatches = contentHasMatch(filterBy);
   return allMovies.filter(hasMatches).map((m) => ({ ...m }));
 }
@@ -39,3 +39,14 @@ export const buildMatchIndicator =
       overview: matchIn(m.overview),
     }));
   };
+
+/**
+ * Why are computed properties valuable, calculated on-demand
+ * and NOT serialized.
+ */
+export function computeMatchedMovies(state: Partial<MovieState>): MovieItem[] {
+  const movies = computeFilteredMovies(state);
+  const addMatchIndicators = buildMatchIndicator(state.filterBy);
+
+  return addMatchIndicators(movies);
+}
