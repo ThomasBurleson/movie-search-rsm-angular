@@ -6,7 +6,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppComponent, MovieCard, HeaderBar } from './components';
 import { HttpClientModule } from '@angular/common/http';
 
-import { MoviesFacade, MoviesDataService } from './data-access';
+import { MoviesDataService, MoviesStore } from './data-access';
 
 @NgModule({
   imports: [
@@ -15,7 +15,7 @@ import { MoviesFacade, MoviesDataService } from './data-access';
     ReactiveFormsModule,
     HttpClientModule,
   ],
-  providers: [MoviesFacade, MoviesDataService],
+  providers: [MoviesStore, MoviesDataService],
   declarations: [AppComponent, MovieCard, HeaderBar],
   bootstrap: [AppComponent],
 })

@@ -11,8 +11,8 @@ export declare type ComputedState<S extends State> = (state: S) => State;
  */
 export const computed =
   <S extends State, C extends State>(
-    create: StateCreator<S>,
-    compute: (state: S) => C
+    buildStoreFn: StateCreator<S>,
+    buildComputedFn: (state: S) => C
   ) =>
   (
     set: SetState<S>,
@@ -23,11 +23,12 @@ export const computed =
     const setWithComputed: SetState<S> = (update, replace) => {
       set((state) => {
         const updated = typeof update === 'object' ? update : update(state);
-        const computedState = compute({ ...state, ...updated });
+        const computedState = buildComputedFn({ ...state, ...updated });
         return { ...updated, ...computedState };
       }, replace);
     };
-    api.setState = setWithComputed;
-    const state = create(setWithComputed, get, api, mutations);
-    return { ...state, ...compute(state) };
+    api.setState = setWithComputed; // for external-to-store use
+    const state = buildStoreFn(setWithComputed, get, api, mutations);
+
+    return { ...state, ...buildComputedFn(state) };
   };

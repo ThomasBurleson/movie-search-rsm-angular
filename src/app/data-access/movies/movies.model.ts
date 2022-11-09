@@ -7,16 +7,6 @@ export interface MovieItem {
 export const trackByID = (m: MovieItem) => m.poster_path;
 
 /**
- * This state is serializable
- */
-export interface MovieState {
-  searchBy: string;
-  filterBy: string;
-  allMovies: MovieItem[];
-  filteredMovies?: MovieItem[];
-}
-
-/**
  * This is a simple API meant for use within the
  * UI layer html templates
  */
@@ -26,13 +16,25 @@ export interface MovieAPI {
   clearFilter: () => void;
 }
 
+/**
+ * This state is serializable
+ */
+export interface MovieState {
+  searchBy: string;
+  filterBy: string;
+  allMovies: MovieItem[];
+}
+
+export interface MovieComputedState {
+  filteredMovies: MovieItem[];
+}
+
 export function initState(): MovieState {
   return {
     searchBy: 'dogs',
     allMovies: [],
     filterBy: '',
-    filteredMovies: [],
   };
 }
 
-export type MovieViewModel = MovieState & MovieAPI;
+export type MovieViewModel = MovieState & MovieAPI & MovieComputedState;

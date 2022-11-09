@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { Component, TrackByFunction } from '@angular/core';
 
-import { MovieItem, MovieViewModel, MoviesFacade } from '../../data-access';
+import { MovieItem, MovieViewModel, MoviesStore } from '../../data-access';
 import { listAnimation, fadeAnimation } from '../movie-card';
 
 const findMovieId: TrackByFunction<MovieItem> = (i: number, m: MovieItem) =>
@@ -16,5 +16,5 @@ export class AppComponent {
   trackByKey = findMovieId;
   vm$: Observable<MovieViewModel> = this.facade.vm$;
 
-  constructor(private facade: MoviesFacade) {}
+  constructor(private facade: MoviesStore) {}
 }
