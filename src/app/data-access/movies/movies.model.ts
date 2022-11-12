@@ -1,3 +1,5 @@
+import { Immutable } from 'immer';
+
 export interface MovieItem {
   title: string;
   overview: string;
@@ -24,6 +26,8 @@ export interface MovieState {
   filterBy: string;
   allMovies: MovieItem[];
 }
+
+export type MovieStateWithAPI = MovieState & MovieAPI;
 
 export interface MovieComputedState {
   filteredMovies: MovieItem[];

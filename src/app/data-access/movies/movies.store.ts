@@ -1,5 +1,7 @@
-import create from 'zustand/vanilla';
+import create, { StateCreator } from 'zustand/vanilla';
 import { StoreApi } from 'zustand/vanilla';
+import { persist } from 'zustand/middleware';
+import { immer } from 'zustand/middleware/immer';
 
 import { Injectable } from '@angular/core';
 import { firstValueFrom, Observable } from 'rxjs';
@@ -11,6 +13,7 @@ import {
   MovieViewModel,
   MovieComputedState,
   MovieItem,
+  MovieStateWithAPI,
 } from './movies.model';
 import { computeMatchedMovies } from './movies.filters';
 import { computed } from '../utils';
@@ -40,7 +43,7 @@ function buildStoreEngine(
   movieAPI: MoviesDataService
 ): StoreApi<MovieViewModel> {
   // Build a State/API store
-  const buildStoreFn = (set, get) => {
+  const buildStoreFn = (set, get): MovieStateWithAPI => {
     const data: MovieState = initState();
     const api: MovieAPI = {
       // Load movies based on searchBy and page
@@ -69,16 +72,20 @@ function buildStoreEngine(
   };
 
   // Calculate/build our derived/computed properties
-  const buildComputedFn = ({ allMovies, filterBy }): MovieComputedState => {
+  const buildComputedFn = ({
+    allMovies,
+    filterBy,
+  }: MovieStateWithAPI): MovieComputedState => {
     const filteredMovies = computeMatchedMovies({ allMovies, filterBy });
     return { filteredMovies };
   };
 
   // Return entire MovieViewModel
-  return create<MovieViewModel>(
-    computed<MovieState & MovieAPI, MovieComputedState>(
+  return create<MovieViewModel>()(
+    computed<MovieStateWithAPI, MovieComputedState>(
       buildStoreFn,
       buildComputedFn
     )
   );
 }
+//
