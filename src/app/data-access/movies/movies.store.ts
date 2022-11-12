@@ -1,6 +1,6 @@
 import create, { StateCreator } from 'zustand/vanilla';
 import { StoreApi } from 'zustand/vanilla';
-import { persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 import { Injectable } from '@angular/core';
@@ -17,6 +17,7 @@ import {
 } from './movies.model';
 import { computeMatchedMovies } from './movies.filters';
 import { computed } from '../utils';
+import { computeWith } from '../utils/computed';
 
 @Injectable()
 export class MoviesStore {
@@ -42,8 +43,23 @@ export class MoviesStore {
 function buildStoreEngine(
   movieAPI: MoviesDataService
 ): StoreApi<MovieViewModel> {
-  // Build a State/API store
-  const buildStoreFn = (set, get): MovieStateWithAPI => {
+  /**
+   * Calculate/build our derived/computed properties
+   */
+  const buildComputedFn = ({
+    allMovies,
+    filterBy,
+  }: Partial<MovieStateWithAPI>): MovieComputedState => {
+    const filteredMovies = computeMatchedMovies({ allMovies, filterBy });
+    return { filteredMovies };
+  };
+
+  /**
+   * Build a State/API store
+   */
+  const buildStoreFn = (set, get, store): MovieViewModel => {
+    set = computeWith<MovieViewModel>(buildComputedFn, store);
+
     const data: MovieState = initState();
     const api: MovieAPI = {
       // Load movies based on searchBy and page
@@ -68,24 +84,19 @@ function buildStoreEngine(
     return {
       ...data,
       ...api,
+      ...buildComputedFn(data),
     };
-  };
-
-  // Calculate/build our derived/computed properties
-  const buildComputedFn = ({
-    allMovies,
-    filterBy,
-  }: MovieStateWithAPI): MovieComputedState => {
-    const filteredMovies = computeMatchedMovies({ allMovies, filterBy });
-    return { filteredMovies };
   };
 
   // Return entire MovieViewModel
   return create<MovieViewModel>()(
-    computed<MovieStateWithAPI, MovieComputedState>(
-      buildStoreFn,
-      buildComputedFn
+    // prettier-ignore
+    devtools(
+      persist(
+        immer(buildStoreFn), 
+        { name: 'movieSearch' }
+      ),
+      { name: 'movieSearch' }
     )
   );
 }
-//
