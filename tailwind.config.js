@@ -1,9 +1,11 @@
+const { createGlobPatternsForDependencies } = require("@nrwl/angular/tailwind");
 const { join } = require("path");
-const plugin = require("tailwindcss/plugin");
 
 module.exports = {
-  mode: "jit",
-  content: [join(__dirname, "src/**/!(*.stories|*.spec).{ts,html}")],
+  content: [
+    join(__dirname, "src/**/!(*.stories|*.spec).{ts,html}"),
+    ...createGlobPatternsForDependencies(__dirname),
+  ],
   theme: {
     extend: {
       screens: {
@@ -27,25 +29,7 @@ module.exports = {
         header: "inset 0px -1px 0px rgba(15, 31, 44, 0.18)",
         footer: "inset 0px 1px 0px rgba(0, 0, 0, 0.08)",
       },
-      lineClamp: {
-        14: "14",
-      },
     },
   },
-  plugins: [
-    require("@tailwindcss/line-clamp"),
-    plugin(({ forms, addBase, addComponents, addUtilities, theme }) => {
-      // Examples of using base layer custom styles in a plugin to match designs
-      addBase({
-        h1: {
-          fontSize: "14px",
-          lineHeight: "16px",
-        },
-        p: {
-          fontSize: "10px",
-          lineHeight: "12px",
-        },
-      });
-    }),
-  ],
+  plugins: [],
 };

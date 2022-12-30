@@ -63,16 +63,12 @@ export const computed: Computed =
     computedProperties // register functions
   ) =>
   (set, get, api, ...b) => {
-    const setWithComputed = (update, replace, ...a) => {
-      set(
-        (state) => {
-          const updated = typeof update === 'object' ? update : update(state);
-          const computedState = computedProperties({ ...state, ...updated });
-          return { ...updated, ...computedState };
-        },
-        replace,
-        ...a
-      );
+    const setWithComputed = (update, replace) => {
+      set((state) => {
+        const updated = typeof update === 'object' ? update : update(state);
+        const computedState = computedProperties({ ...state, ...updated });
+        return { ...updated, ...computedState };
+      }, replace);
     };
 
     /**
