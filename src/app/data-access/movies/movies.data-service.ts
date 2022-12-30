@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { pluck, tap } from 'rxjs';
+import { pluck, tap, of } from 'rxjs';
 
 /** A trivial data layer service that requests movies from a movie database API */
 @Injectable()

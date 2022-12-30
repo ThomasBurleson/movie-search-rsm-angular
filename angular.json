@@ -57,7 +57,7 @@
               "namedChunks": true
             }
           },
-          "defaultConfiguration": "production"
+          "defaultConfiguration": "development"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
@@ -66,7 +66,8 @@
               "browserTarget": "movie-search:build:production"
             },
             "development": {
-              "browserTarget": "movie-search:build:development"
+              "browserTarget": "movie-search:build:development",
+              "disableHostCheck": true
             }
           },
           "defaultConfiguration": "development"

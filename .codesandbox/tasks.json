@@ -1,0 +1,51 @@
+{
+  // These tasks will run in order when initializing your CodeSandbox project.
+  "setupTasks": [
+    {
+      "name": "Install Dependencies",
+      "command": "npm install"
+    }
+  ],
+
+  // These tasks can be run from CodeSandbox. Running one will open a log in the app.
+  "tasks": {
+    "ng": {
+      "name": "ng",
+      "command": "npm run ng",
+      "runAtStart": false
+    },
+    "start": {
+      "name": "start",
+      "command": "npm run start",
+      "runAtStart": true
+    },
+    "build": {
+      "name": "build",
+      "command": "npm run build",
+      "runAtStart": false
+    },
+    "watch": {
+      "name": "watch",
+      "command": "npm run watch",
+      "runAtStart": false
+    },
+    "test": {
+      "name": "test",
+      "command": "npm run test",
+      "runAtStart": false
+    },
+    "postinstall": {
+      "name": "postinstall",
+      "command": "npm run postinstall",
+      "runAtStart": false
+    },
+    "npm run nx serve --host 0.0.0.0 --disable-host-check": {
+      "name": "npm run nx serve --host 0.0.0.0 --disable-host-check",
+      "command": "npm run nx serve --host 0.0.0.0 --disable-host-check"
+    },
+    "ng --host 0.0.0.0 --disable-host-check": {
+      "name": "ng --host 0.0.0.0 --disable-host-check",
+      "command": "ng --host 0.0.0.0 --disable-host-check"
+    }
+  }
+}

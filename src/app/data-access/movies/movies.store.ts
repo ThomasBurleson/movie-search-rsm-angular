@@ -1,4 +1,4 @@
-import create, { StateCreator } from 'zustand/vanilla';
+import create from 'zustand/vanilla';
 import { StoreApi } from 'zustand/vanilla';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -16,7 +16,6 @@ import {
   MovieStateWithAPI,
 } from './movies.model';
 import { computeMatchedMovies } from './movies.filters';
-import { computed } from '../utils';
 import { computeWith } from '../utils/computed';
 
 @Injectable()
@@ -57,7 +56,7 @@ function buildStoreEngine(
   /**
    * Build a State/API store
    */
-  const buildStoreFn = (set, get, store): MovieViewModel => {
+  const buildStoreInstance = (set, get, store): MovieViewModel => {
     set = computeWith<MovieViewModel>(buildComputedFn, store);
 
     const data: MovieState = initState();
@@ -93,7 +92,7 @@ function buildStoreEngine(
     // prettier-ignore
     devtools(
       persist(
-        immer(buildStoreFn), 
+        immer(buildStoreInstance), 
         { name: 'movieSearch' }
       ),
       { name: 'movieSearch' }
