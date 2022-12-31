@@ -38,14 +38,6 @@
       "name": "postinstall",
       "command": "npm run postinstall",
       "runAtStart": false
-    },
-    "npm run nx serve --host 0.0.0.0 --disable-host-check": {
-      "name": "npm run nx serve --host 0.0.0.0 --disable-host-check",
-      "command": "npm run nx serve --host 0.0.0.0 --disable-host-check"
-    },
-    "ng --host 0.0.0.0 --disable-host-check": {
-      "name": "ng --host 0.0.0.0 --disable-host-check",
-      "command": "ng --host 0.0.0.0 --disable-host-check"
     }
   }
 }
