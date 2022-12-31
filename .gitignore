@@ -9,13 +9,13 @@
 /node_modules
 
 # IDEs and editors
-.idea/
-.settings/
-.angular/
-.codesandbox/
+.idea
+.settings
+.angular/*
+.codesandbox/*
 .classpath
 .project
-.c9/
+.c9
 *.launch
 *.sublime-workspace
 
