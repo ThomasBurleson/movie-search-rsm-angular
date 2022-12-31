@@ -12,6 +12,7 @@
 .idea/
 .settings/
 .angular/
+.codesandbox/
 .classpath
 .project
 .c9/
