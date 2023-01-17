@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 import { tap } from 'rxjs/operators';
 /**
  * Make customer RxJS operator to easily log colorized output to the console.
