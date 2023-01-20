@@ -1,6 +1,6 @@
 # MovieSearch (Angular + Elf)
 
-![](https://user-images.githubusercontent.com/210413/212772247-112e3802-94ac-4500-80b8-ae62d8342f7b.png)
+[![](https://user-images.githubusercontent.com/210413/212772247-112e3802-94ac-4500-80b8-ae62d8342f7b.png)](https://codesandbox.io/p/github/ThomasBurleson/elf-angular-movie-search/draft/adoring-cookies?file=%2Fpackage.json&selection=%5B%7B%22endColumn%22%3A32%2C%22endLineNumber%22%3A18%2C%22startColumn%22%3A32%2C%22startLineNumber%22%3A18%7D%5D)
 
 ## Introduction
 
